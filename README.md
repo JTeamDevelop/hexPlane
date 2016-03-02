@@ -1,6 +1,8 @@
 # hexPlane
 JS framework to display randomly generated hex map using D3
 
+*This is free because the grace of God is free through His son Jesus.*
+
 The map creates a number of random zones that each contain a number of random hex cells. This is meant to vary roughly simulate different terrains. But the map has a lot of parameters that can be modified to change functionality.
 
 **This is a complete and functioning project.**
