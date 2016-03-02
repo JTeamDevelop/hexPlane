@@ -1,0 +1,12 @@
+path {
+  stroke: #fff;
+}
+
+circle {
+  fill: #000;
+  pointer-events: none;
+}
+
+.selected {
+  fill: yellow;
+}
