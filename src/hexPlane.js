@@ -21,13 +21,17 @@
 
 */
 
-var TERRAIN = [{name:"Mountains",color:"brown"}, {name:"Water",color:"blue"}, {name:"Forest",color:"green"}
+var TERRAIN = [{name:"Water",color:"blue"}, {name:"Mountains",color:"brown"},  {name:"Forest",color:"green"}
   , {name:"Plains",color:"tan"}];
 
 Array.prototype.random = function () {
   var i = Math.random()*this.length;
   return this[Math.floor(i)];
 }
+function rndInt (min,max) {
+  return Number(Math.floor(Math.random() * (max - min + 1)) + min);
+}
+
 
 //random value map - min & max bound all ponts
 //bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
@@ -85,15 +89,18 @@ drawCell = function (map,pos) {
 }
 
 var hexPlaneMap = function () {
-  this._width = 1200;
-  this._height = 800;
+
+  this._width =document.getElementById('hexPlane').offsetWidth*.95;
+  this._height = document.getElementById('hexPlane').offsetHeight*.95;
   this._hexSize = 10;
   this._pointy = true;
+  this._useZones = false;
+  this._water = 0.3;
 
   //variables for random map - min & max bound ponts
   //bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
-  this._min = 1000, this._max = 4000, this._bias = 2000, this._influence = 1;
-  
+  this._min = 900, this._max = 2700, this._bias = 1800, this._influence = 1;
+
   this._randomMapSize = function () {
     var r = Math.floor(Math.random()*14)+2;
     return r;
@@ -113,14 +120,20 @@ hexPlaneMap.prototype.random = function () {
   var n = Math.floor(getRndBias(this._min, this._max, this._bias, this._influence));
   this._rndC = n;
 
-  var i=0, c=0;
-  while(i<n) {
-    c = this.addZone();
-    i+=c;
+  if(this._useZones) {
+    var i=0, c=0;
+    while(i<n) {
+      c = this.addZone();
+      i+=c;
+    }
+    this._actualC = i;
   }
-
-  this._actualC = i;
-
+  else{
+    for(var i =0; i<n ; i++) {
+      this.addCell();
+    }
+    this.makeTerrain();
+  }
 }
 hexPlaneMap.prototype.center = function () {
   return [this._width/2,this._height/2];
@@ -130,6 +143,7 @@ hexPlaneMap.prototype.rawcells = function () {
   for (var c in this.cells) {
     cell.push([this.cells[c].x,this.cells[c].y]);
     cell[i].zone = this.cells[c].zone;
+    cell[i].terrain = this.cells[c].terrain;
     i++;
   }
 
@@ -137,27 +151,21 @@ hexPlaneMap.prototype.rawcells = function () {
 }
 //axial neighboors
 hexPlaneMap.prototype.neighboors = function (cell) {
-  var d = [];
+  //n will be all neighboors, o will be open cells
+  var n = [], o=[], e={};
   for (var i = 0; i < 6; i++) {
-    d.push(this.edge(cell,i));
-  }
-  return d;
-};
-hexPlaneMap.prototype.edge = function (cell,i) {
-  cell = this.cells[cell];
-  //neighboor cell to the edge
-  var n = this.std_n, nx = cell.x+n[i][0], ny=cell.y+n[i][1],
-    cid = nx+","+ny, ncell = null, edge=true, nzone=-1;
-  if(typeof this.cells[cid] !== "undefined") {
-    edge = false;
-    ncell = this.cells[cid];
-    nzone = cell.zone;
-    if(cell.zone != ncell.zone) {
-      edge = true;
-      nzone = ncell.zone;
+    e = this.edge(cell,i)
+    if(e.ncell == null) {
+      o.push(e);
+    }
+    else {
+      n.push(e);
     }
   }
-
+  return {n:n,o:o};
+};
+hexPlaneMap.prototype.points = function (cell,i) {
+  cell = this.cells[cell];
   //convert cube to even-r offset for point calculations
   //col = x + (z + (z&1)) / 2
   //row = z
@@ -196,7 +204,24 @@ hexPlaneMap.prototype.edge = function (cell,i) {
                  y + this._hexSize * Math.sin(angle_rad)]);
   }
 
-  return {points:p, ncell:ncell, edge:edge, nzone: nzone};
+  return p;
+}
+hexPlaneMap.prototype.edge = function (cell,i) {
+  cell = this.cells[cell];
+  //neighboor cell to the edge
+  var n = this.std_n, nx = cell.x+n[i][0], ny=cell.y+n[i][1],
+    cid = nx+","+ny, ncell = null, edge=true, nzone=-1;
+  if(typeof this.cells[cid] !== "undefined") {
+    edge = false;
+    ncell = this.cells[cid];
+    nzone = cell.zone;
+    if(cell.zone != ncell.zone) {
+      edge = true;
+      nzone = ncell.zone;
+    }
+  }
+
+  return {i:i, ncell:ncell, ncoord:[nx,ny], edge:edge, nzone: nzone};
 }
 hexPlaneMap.prototype.zoneEdges = function () {
   var e=[],p=[];
@@ -208,6 +233,63 @@ hexPlaneMap.prototype.zoneEdges = function () {
   }
   return p;
 }
+hexPlaneMap.prototype.addCell = function () {
+  //cA pushes index of all cells, c holds the random cell, o is the empty neighboors
+  var cA=[], c = "", o="", newCell = "";
+  for(var x in this.cells) {
+    cA.push(x);
+  }
+
+  if(cA.length==0){
+    this.cells["0,0"] = new HCell(0,0,-1);
+  }
+  else {
+    while (newCell.length==0) {
+      c = cA.random();
+      o = this.neighboors(c).o;
+      if(o.length != 0) {
+        o = o.random();
+        newCell = o.ncoord[0]+","+o.ncoord[1];
+        this.cells[newCell] = new HCell(o.ncoord[0],o.ncoord[1],-1);
+      }
+    }
+  }
+}
+hexPlaneMap.prototype.makeTerrain = function () {
+  //cA pushes index of all cells
+  //Then we pick 5 to 10 points to start and add terrain
+  var cA=[], points=[], nP= rndInt(5,10), p ="", cell={};
+  for(var x in this.cells) {
+    cA.push(x);
+  }
+
+  while(points.length<nP) {
+    p=cA.random();
+    if(points.indexOf(p)==-1) {
+      this.cells[p].terrain = rndInt(1,TERRAIN.length-1);
+      points.push(p);
+    }
+  }
+
+  var land = Math.floor(cA.length*(1-this._water)), n=[], nT = "";
+  while (points.length < land) {
+    p = points.random();
+    n = this.neighboors(p).n;
+    n = n.random();
+    nT = n.ncoord[0]+","+n.ncoord[1];
+    if(this.cells[nT].terrain == -1) {
+      this.cells[nT].terrain = rndInt(1,TERRAIN.length-1);
+      points.push(nT);
+    }
+  }
+
+  for(var i = 0; i<cA.length ; i++) {
+    if(points.indexOf(cA[i]) == -1){
+      this.cells[cA[i]].terrain = 0;
+    }
+  }
+
+}
 hexPlaneMap.prototype.addZone = function () {
   var size = this._randomZoneSize();
   var nz = this.zones.length;
@@ -216,7 +298,7 @@ hexPlaneMap.prototype.addZone = function () {
   for (var i = 0; i < size; i++) {
     //new map - first cell is at 0,0
     if(nz==0 && i==0) {
-      new HCell(Z,0,0,0);
+      new HCell(0,0,0,Z);
     }
     else {
       //first cell in new zone has to start at a random zone
@@ -234,7 +316,7 @@ hexPlaneMap.prototype.addZone = function () {
           break;
         }
       }
-      new HCell(Z,ne[0],ne[1],0);
+      new HCell(ne[0],ne[1],0,Z);
     }
   }
   this.zones.push(Z);
@@ -242,7 +324,7 @@ hexPlaneMap.prototype.addZone = function () {
 };
 hexPlaneMap.prototype.display = function () {
   var map = this;
-  var svg = d3.select("body").append("svg")
+  var svg = d3.select("#hexPlane").append("svg")
     .attr("width", map._width)
     .attr("height", map._height);
 
@@ -254,7 +336,9 @@ hexPlaneMap.prototype.display = function () {
     .enter().append("path")
     .classed({'voronoi': true})
     .style({fill: function (cell) {
-      return TERRAIN[map.zones[cell.zone].terrain].color;
+      if(cell.terrain>-1) {
+        return TERRAIN[cell.terrain].color;
+      }
     }})
     .attr("d", function(cell){
       return drawCell(map,cell);
@@ -307,18 +391,20 @@ Zone.prototype.rndNewEdge = function () {
   }
 };
 
-var HCell = function (zone,x,y,terrain) {
+var HCell = function (x,y,terrain,zone) {
   this.x = x;
   this.y = y;
   this.terrain = terrain;
-  this.zone=zone.id;
+  this.zone = -1;
 
-  zone.map.cells[x+","+y] = this;
-  zone.cells.push(x+","+y);
+  if(zone === "undefined") {
+    this.zone = zone.id;
+    zone.map.cells[x+","+y] = this;
+    zone.cells.push(x+","+y);
+  }
 }
 
 var map = new hexPlaneMap();
 map.random();
 console.log(map);
 map.display();
-
