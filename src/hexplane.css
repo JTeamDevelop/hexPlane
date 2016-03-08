@@ -1,3 +1,11 @@
+#hexPlane {
+  position:fixed;
+  top:15px;
+  bottom:20px;
+  left:1%;
+  right:1%;
+}
+
 path {
   stroke: #fff;
 }
