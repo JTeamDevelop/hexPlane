@@ -21,25 +21,85 @@
 
 */
 
-var TERRAIN = [{name:"Water",color:"blue"}, {name:"Mountains",color:"brown"},  {name:"Forest",color:"green"}
-  , {name:"Plains",color:"tan"}];
+var TERRAIN = [{name:"Water",color:"blue"}, {name:"Mountains",color:"brown"},  {name:"Forest",color:"DarkGreen"}
+  , {name:"Plains",color:"LightGreen"}, {name:"Desert",color:"Khaki"}];
 
-Array.prototype.random = function () {
-  var i = Math.random()*this.length;
-  return this[Math.floor(i)];
+//makes a unique id for various objects that is n characters long
+makeUID = function (n) {
+	n = typeof n === "undefined" ? 24 : n;
+	var text = "";
+	var possible = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
+	
+	for( var i=0; i < n; i++ ){
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	
+   	return text;
+};
+
+RNG = function(seed){
+	this.seedrnd = typeof seed === "undefined" ? Math.random : new xor4096(seed);
+	this.random=this.seedrnd;
+
+};
+RNG.prototype.rndInt = function (min, max) {
+    return Number(Math.floor(this.seedrnd() * (max - min + 1)) + min);
 }
-function rndInt (min,max) {
-  return Number(Math.floor(Math.random() * (max - min + 1)) + min);
+RNG.prototype.multiRoll = function (min, max, num) {
+    var x=0;
+	for(var i=0;i<num;i++){
+		x+=this.rndInt(min, max);
+	}
+    return x;
 }
+RNG.prototype.FateRoll = function (){ return this.multiRoll (1, 3, 4)-8; }
+RNG.prototype.rndArray = function (array) {
+	if (!array.length) { return null; }
+	return array[Math.floor(this.RND() * array.length)];
+}
+// @returns {array} New array with randomized items
+RNG.prototype.shuffleAr = function (array) {
+  	var currentIndex = array.length, temporaryValue, randomIndex ;
 
+  	// While there remain elements to shuffle...
+  	while (0 !== currentIndex) {
 
+    	// Pick a remaining element...
+    	randomIndex = Math.floor(this.seedrnd() * currentIndex);
+    	currentIndex -= 1;
+
+    	// And swap it with the current element.
+    	temporaryValue = array[currentIndex];
+    	array[currentIndex] = array[randomIndex];
+    	array[randomIndex] = temporaryValue;
+  	}
+
+  	return array;
+}
 //random value map - min & max bound all ponts
 //bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
-function getRndBias(min, max, bias, influence) {
-    var rnd = Math.random() * (max - min) + min,   // random in range
-        mix = Math.random() * influence;           // random mixer
+RNG.prototype.RNDBias = function (min, max, bias, influence) {
+    var rnd = this.random() * (max - min) + min,   // random in range
+        mix = this.random() * influence;           // random mixer
     return rnd * (1 - mix) + bias * mix;           // mix full range and bias
 }
+
+Array.prototype.random = function (RNG) {
+	RNG = typeof RNG === "undefined" ? Math : RNG;
+  var i = RNG.random()*this.length;
+  return this[Math.floor(i)];
+}
+Array.prototype.unique = function() {
+    var a = this.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+    }
+
+    return a;
+};
 
 function polygon(d) {
   return "M" + d.join("L") + "Z";
@@ -88,7 +148,9 @@ drawCell = function (map,pos) {
   return polygon(d);
 }
 
-var hexPlaneMap = function () {
+var hexPlaneMap = function (seed) {
+  this.uid = typeof seed === "undefined" ? makeUID() : seed;
+  this.RNG = new RNG(this.uid);
 
   this._width =document.getElementById('hexPlane').offsetWidth*.95;
   this._height = document.getElementById('hexPlane').offsetHeight*.95;
@@ -97,16 +159,19 @@ var hexPlaneMap = function () {
   this._useZones = false;
   this._water = 0.3;
 
+  this._probTerrain = [1,1,1,2,2,2,2,3,3,3,4];
+
   //variables for random map - min & max bound ponts
   //bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
   this._min = 900, this._max = 2700, this._bias = 1800, this._influence = 1;
 
+	var map = this;
   this._randomMapSize = function () {
-    var r = Math.floor(Math.random()*14)+2;
+    var r = Math.floor(map.RNG.random()*14)+2;
     return r;
   }
   this._randomZoneSize = function () {
-    var r = Math.floor(Math.random()*14)+2;
+    var r = Math.floor(map.RNG.random()*14)+2;
     return r;
   }
 
@@ -117,7 +182,7 @@ var hexPlaneMap = function () {
   this.zones = [];
 }
 hexPlaneMap.prototype.random = function () {
-  var n = Math.floor(getRndBias(this._min, this._max, this._bias, this._influence));
+  var n = Math.floor(this.RNG.RNDBias(this._min, this._max, this._bias, this._influence));
   this._rndC = n;
 
   if(this._useZones) {
@@ -139,13 +204,15 @@ hexPlaneMap.prototype.center = function () {
   return [this._width/2,this._height/2];
 }
 hexPlaneMap.prototype.rawcells = function () {
-  var cell = [], i=0;
+  var cell = [], i=0, terrains=[0,0,0,0];
   for (var c in this.cells) {
     cell.push([this.cells[c].x,this.cells[c].y]);
     cell[i].zone = this.cells[c].zone;
     cell[i].terrain = this.cells[c].terrain;
     i++;
+    terrains[this.cells[c].terrain]++;
   }
+  console.log(terrains);
 
   return cell;
 }
@@ -221,7 +288,7 @@ hexPlaneMap.prototype.edge = function (cell,i) {
     }
   }
 
-  return {i:i, ncell:ncell, ncoord:[nx,ny], edge:edge, nzone: nzone};
+  return {i:i, ncell:ncell, ncoord:[nx,ny], id:cid, edge:edge, nzone: nzone};
 }
 hexPlaneMap.prototype.zoneEdges = function () {
   var e=[],p=[];
@@ -245,10 +312,10 @@ hexPlaneMap.prototype.addCell = function () {
   }
   else {
     while (newCell.length==0) {
-      c = cA.random();
+      c = cA.random(this.RNG);
       o = this.neighboors(c).o;
       if(o.length != 0) {
-        o = o.random();
+        o = o.random(this.RNG);
         newCell = o.ncoord[0]+","+o.ncoord[1];
         this.cells[newCell] = new HCell(o.ncoord[0],o.ncoord[1],-1);
       }
@@ -258,42 +325,99 @@ hexPlaneMap.prototype.addCell = function () {
 hexPlaneMap.prototype.makeTerrain = function () {
   //cA pushes index of all cells
   //Then we pick 5 to 10 points to start and add terrain
-  var cA=[], points=[], nP= rndInt(5,10), p ="", cell={};
+  var map = this, cA=[], points = [];
+  
   for(var x in this.cells) {
     cA.push(x);
   }
+  var land = Math.floor(cA.length*(1-this._water));
 
-  while(points.length<nP) {
-    p=cA.random();
-    if(points.indexOf(p)==-1) {
-      this.cells[p].terrain = rndInt(1,TERRAIN.length-1);
-      points.push(p);
-    }
+  function noTerrainNeighboors(cell) {
+    var N=map.neighboors(cell).n, noTerrain=[];
+
+    N.forEach(function(c){
+      if(c.ncell.terrain == -1) {
+        noTerrain.push(c);
+      }
+    })
+
+    return noTerrain;
   }
 
-  var land = Math.floor(cA.length*(1-this._water)), n=[], nT = "";
-  while (points.length < land) {
-    p = points.random();
-    n = this.neighboors(p).n;
-    n = n.random();
-    nT = n.ncoord[0]+","+n.ncoord[1];
-    if(this.cells[nT].terrain == -1) {
-      this.cells[nT].terrain = rndInt(1,TERRAIN.length-1);
-      points.push(nT);
+  function terrainZone(p) {
+    var nc = map.RNG.rndInt(3,25), T=map._probTerrain.random(map.RNG), zone=[], neighboors=[], noTerrain=[], rndCell="";
+    zone.push(p);
+    
+    if(points.length + nc > land) {
+      nc = land - points.length;
     }
+
+    while(zone.length < nc) {
+      noTerrain=[];
+      zone.forEach(function(id){
+        noTerrain= noTerrain.concat(noTerrainNeighboors(id)).unique();
+      });
+
+      if(noTerrain.length==0) {
+        break;
+      }
+      else {
+        rndCell = noTerrain.random(map.RNG);
+        map.cells[rndCell.id].terrain = T;
+        zone.push(rndCell.id);
+        points.push(rndCell.id);
+      }
+    }
+    
   }
 
+  function initialize() {
+    var nI= map.RNG.rndInt(3,7), initial = [], cell = "";  
+
+    while (initial.length < nI) {
+      cell=cA.random(map.RNG);
+      
+      if(initial.indexOf(cell)==-1) {
+        initial.push(cell);
+        terrainZone(cell);
+      }
+    }     
+  }
+
+  initialize();
+
+  while (points.length < land*2/3) {
+    terrainZone(points.random(map.RNG));
+  }
+
+  var origin="", noTerrain=[];
+  for(var i = points.length; i<land ; i++) {
+    origin=points.random(map.RNG);
+    noTerrain=noTerrainNeighboors(origin);
+
+    while(noTerrain.length==0) {
+      origin=points.random(map.RNG);
+      noTerrain=noTerrainNeighboors(origin);
+    }
+    
+    cell=noTerrain.random(map.RNG);
+    points.push(cell.id);
+    map.cells[cell.id].terrain=map.cells[origin].terrain;
+  }
+  
   for(var i = 0; i<cA.length ; i++) {
-    if(points.indexOf(cA[i]) == -1){
-      this.cells[cA[i]].terrain = 0;
+    cell = this.cells[cA[i]];
+    if(cell.terrain == -1){
+      cell.terrain = 0;
     }
   }
+
 
 }
 hexPlaneMap.prototype.addZone = function () {
   var size = this._randomZoneSize();
   var nz = this.zones.length;
-  var Z = new Zone(this,nz), rZ = this.zones.random(), ne=null;
+  var Z = new Zone(this,nz), rZ = this.zones.random(this.RNG), ne=null;
 
   for (var i = 0; i < size; i++) {
     //new map - first cell is at 0,0
@@ -305,7 +429,7 @@ hexPlaneMap.prototype.addZone = function () {
       if(i==0) {
         while (ne==null) {
           ne = rZ.rndNewEdge();
-          rZ = this.zones.random();
+          rZ = this.zones.random(this.RNG);
         }
       }
       //otherwise we get edges from the zone
@@ -357,7 +481,7 @@ var Zone = function (map,i) {
   this.map=map;
   this.id=i;
   this.cells=[];
-  this.terrain = Math.floor(Math.random()*TERRAIN.length);
+  this.terrain = Math.floor(map.RNG.random()*TERRAIN.length);
 }
 Zone.prototype.edge = function () {
   var d = [], e=[], n = {}, cell = {};
@@ -384,7 +508,7 @@ Zone.prototype.rndNewEdge = function () {
     return null;
   }
   else {
-    var ncell = d.random(), nidx = this.map.std_n;
+    var ncell = d.random(this.map.RNG), nidx = this.map.std_n;
     ncell = [ncell[0].x+nidx[ncell[1]][0],ncell[0].y+nidx[ncell[1]][1]];
 
     return ncell;
