@@ -7,6 +7,8 @@ The map creates a number of random zones that each contain a number of random he
 
 **This is a complete and functioning project.**
 
+You can try it out: http://jteamdevelop.github.io/hexPlane
+
 Just include D3 and the hexPlane.js file in your html:
 ```
   <script type="text/javascript" src="src/d3.min.js"></script>
