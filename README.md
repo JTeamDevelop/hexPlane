@@ -6,6 +6,7 @@ JS framework to display randomly generated hex map using D3
 The map creates a number of random zones that each contain a number of random hex cells. This is meant to vary roughly simulate different terrains. But the map has a lot of parameters that can be modified to change functionality.
 
 **This is a complete and functioning project.**
+You can try it out: http://jteamdevelop.github.io/hexPlane
 
 Just include D3 and the hexPlane.js file in your html:
 ```
