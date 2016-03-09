@@ -18,3 +18,12 @@ circle {
 .selected {
   fill: yellow;
 }
+
+.tooltipsy
+{
+    padding: 10px;
+    max-width: 200px;
+    color: #303030;
+    background-color: #f5f5b5;
+    border: 1px solid #deca7e;
+}
