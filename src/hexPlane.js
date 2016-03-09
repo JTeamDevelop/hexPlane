@@ -24,16 +24,42 @@
 var TERRAIN = [{name:"Water",color:"blue"}, {name:"Mountains",color:"brown"},  {name:"Forest",color:"DarkGreen"}
   , {name:"Plains",color:"LightGreen"}, {name:"Desert",color:"Khaki"}];
 
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
+d3.selection.prototype.moveToBack = function() {
+	return this.each(function() {
+		var firstChild = this.parentNode.firstChild;
+		if (firstChild) {
+			this.parentNode.insertBefore(this, firstChild);
+		}
+	});
+};
+
+//Basic http asynchronous request
+function httpGetAsync(theUrl, callback, rarity)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText,rarity);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.send(null);
+}
+
 //makes a unique id for various objects that is n characters long
 makeUID = function (n) {
 	n = typeof n === "undefined" ? 24 : n;
 	var text = "";
 	var possible = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
-	
+
 	for( var i=0; i < n; i++ ){
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
-	
+
    	return text;
 };
 
@@ -84,6 +110,10 @@ RNG.prototype.RNDBias = function (min, max, bias, influence) {
     return rnd * (1 - mix) + bias * mix;           // mix full range and bias
 }
 
+String.prototype.capFirst = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
 Array.prototype.random = function (RNG) {
 	RNG = typeof RNG === "undefined" ? Math : RNG;
   var i = RNG.random()*this.length;
@@ -108,9 +138,9 @@ function line(d) {
   return "M" + d.join("L") + "Z";
 }
 
-drawCell = function (map,pos) {
+cellCenter = function (map,pos) {
   var width = map._hexSize * 2, horiz = 0 , height = 0, vert = 0;
-  var pointy = 30, c=map.center(), angle_deg = 0, angle_rad = 0, p = [], d=[];
+  var c=map.center();
 
   //convert cube to even-r offset
   //col = x + (z + (z&1)) / 2
@@ -137,15 +167,82 @@ drawCell = function (map,pos) {
     y = c[1]+y*vert;
   }
 
+  return [x,y];
+}
+
+drawCell = function (map,pos) {
+  var pointy = 30, angle_deg = 0, angle_rad = 0, d=[];
+	var cC = cellCenter(map,pos);
+
+  if (map._pointy) {
+    pointy = 30;
+  }
+  else {
+    pointy = 0;
+  }
+
   //flat topped angles are 0°, 60°, 120°, 180°, 240°, 300° and
   //pointy topped angles are 30°, 90°, 150°, 210°, 270°, 330°.
   for (var i = 0; i < 6; i++) {
     angle_deg = 60 * i + pointy;
     angle_rad = Math.PI / 180 * angle_deg;
-    d.push([x + map._hexSize * Math.cos(angle_rad),
-                 y + map._hexSize * Math.sin(angle_rad)]);
+    d.push([cC[0] + map._hexSize * Math.cos(angle_rad),
+                 cC[1] + map._hexSize * Math.sin(angle_rad)]);
   }
   return polygon(d);
+}
+
+function population(map) {
+	var rarity = ["common","uncommon","rare","mythic"];
+	var d = [
+		["Alara",["Shards of Alara","ALA",101,60,53,15],["Conflux","CON",60,40,35,10],["Alara Reborn","ARB",60,40,35,10]],
+		["Zendikar",["Zendikar","ZEN",101,60,53,15],["Worldwake","WWK",60,40,35,10],["Rise of the Eldrazi","ROE",100,60,53,15]]
+	];
+	var b = [
+		["Magic 2010","M10",101,60,53,15],
+		["Magic 2011","M11",101,60,53,15]
+	];
+
+	var cd = d.random(map.RNG), cb = b.random(map.RNG);
+
+	var pop = {c:[],u:[],r:[],m:[],n:0,i:0}, url='https://api.deckbrew.com/mtg/cards?set=', curl='';
+	function loadPop (data,rarity){
+		data = JSON.parse(data);
+		pop[rarity[0]] = pop[rarity[0]].concat(data);
+		pop.i++;
+		if(pop.n==pop.i){
+			map.populate(pop);
+		}
+	}
+
+	for(var i=1; i<cd.length;i++) {
+		curl = url+cd[i][1];
+		for(var j=0; j<4; j++){
+			for(var k=0; k<cd[i][2+j]/100; k++){
+				httpGetAsync(curl+'&rarity='+rarity[j]+'&page='+k, loadPop,rarity[j]);
+				pop.n++;
+			}
+		}
+	}
+
+	curl = url+cb[1];
+	for(var j=0; j<4; j++){
+		for(var k=0; k<cb[2+j]/100; k++){
+			httpGetAsync(curl+'&rarity='+rarity[j]+'&page='+k, loadPop,rarity[j]);
+			pop.n++;
+		}
+	}
+
+}
+
+function rarity(RNG) {
+	function rare (){
+		var r= ["r","r","r","r","r","r","r","m"];
+		return r.random(RNG);
+	}
+	var b= ["l","c","c","c","c","c","c","c","c","c","c","u","u","u",rare()];
+
+	return b.random(RNG);
 }
 
 var hexPlaneMap = function (seed) {
@@ -179,6 +276,7 @@ var hexPlaneMap = function (seed) {
   this.std_n = [[0,1],[-1,1],[-1,0],[0,-1],[1,-1],[1,0]];
 
   this.cells = {};
+  this.pop = [];
   this.zones = [];
 }
 hexPlaneMap.prototype.random = function () {
@@ -199,22 +297,67 @@ hexPlaneMap.prototype.random = function () {
     }
     this.makeTerrain();
   }
+
+	var map = this;
+  	var rpop = population(map);
+
+}
+hexPlaneMap.prototype.populate = function (rpop) {
+	var cA=[], cPop=[], cell="", r="", card ={}, tracker={l:0,c:0,u:0,r:0,m:0};
+	for(var x in this.cells) {
+		cA.push(x);
+	}
+	var n = Math.round(this._rndC/10);
+	while (cPop.length < n){
+		cell = cA.random(this.RNG);
+		if(cPop.indexOf(cell) == -1){
+      cPop.push(cell);
+			r = rarity(this.RNG);
+			if(r!="l"){
+				card = rpop[r].random(this.RNG);
+				this.cells[cell].pop = {
+					rarity:r,
+					cell:cell,
+					types:card.types,
+					subtypes:card.subtypes,
+					cmc:card.cmc,
+					colors:card.colors,
+					pow:card.power,
+					tough:card.toughness
+				};
+			}
+			tracker[r]++;
+		}
+	}
+	console.log(tracker);
+	this.popDisplay();
 }
 hexPlaneMap.prototype.center = function () {
   return [this._width/2,this._height/2];
 }
 hexPlaneMap.prototype.rawcells = function () {
-  var cell = [], i=0, terrains=[0,0,0,0];
+  var cell = [], i=0, terrains=[0,0,0,0,0];
   for (var c in this.cells) {
     cell.push([this.cells[c].x,this.cells[c].y]);
-    cell[i].zone = this.cells[c].zone;
-    cell[i].terrain = this.cells[c].terrain;
+    cell[i].data = this.cells[c]
     i++;
     terrains[this.cells[c].terrain]++;
   }
   console.log(terrains);
 
   return cell;
+}
+hexPlaneMap.prototype.popData = function () {
+  var pop = [], i=0;
+  for (var c in this.cells) {
+  	if(Object.keys(this.cells[c].pop).length != 0){ 
+  		pop.push([this.cells[c].x,this.cells[c].y]);
+    	pop[i].data = this.cells[c].pop;
+    	i++;
+  	}
+  }
+
+  return pop;
 }
 //axial neighboors
 hexPlaneMap.prototype.neighboors = function (cell) {
@@ -326,7 +469,7 @@ hexPlaneMap.prototype.makeTerrain = function () {
   //cA pushes index of all cells
   //Then we pick 5 to 10 points to start and add terrain
   var map = this, cA=[], points = [];
-  
+
   for(var x in this.cells) {
     cA.push(x);
   }
@@ -347,7 +490,7 @@ hexPlaneMap.prototype.makeTerrain = function () {
   function terrainZone(p) {
     var nc = map.RNG.rndInt(3,25), T=map._probTerrain.random(map.RNG), zone=[], neighboors=[], noTerrain=[], rndCell="";
     zone.push(p);
-    
+
     if(points.length + nc > land) {
       nc = land - points.length;
     }
@@ -368,20 +511,20 @@ hexPlaneMap.prototype.makeTerrain = function () {
         points.push(rndCell.id);
       }
     }
-    
+
   }
 
   function initialize() {
-    var nI= map.RNG.rndInt(3,7), initial = [], cell = "";  
+    var nI= map.RNG.rndInt(3,7), initial = [], cell = "";
 
     while (initial.length < nI) {
       cell=cA.random(map.RNG);
-      
+
       if(initial.indexOf(cell)==-1) {
         initial.push(cell);
         terrainZone(cell);
       }
-    }     
+    }
   }
 
   initialize();
@@ -399,12 +542,12 @@ hexPlaneMap.prototype.makeTerrain = function () {
       origin=points.random(map.RNG);
       noTerrain=noTerrainNeighboors(origin);
     }
-    
+
     cell=noTerrain.random(map.RNG);
     points.push(cell.id);
     map.cells[cell.id].terrain=map.cells[origin].terrain;
   }
-  
+
   for(var i = 0; i<cA.length ; i++) {
     cell = this.cells[cA[i]];
     if(cell.terrain == -1){
@@ -452,29 +595,83 @@ hexPlaneMap.prototype.display = function () {
     .attr("width", map._width)
     .attr("height", map._height);
 
-  var path = svg.append("g").classed({'gHex': true})
+  var hex = svg.append("g").classed({'gHex': true})
     .selectAll("path")
     .data(map.rawcells(), function(cell){
       return drawCell(map,cell);
     })
     .enter().append("path")
-    .classed({'voronoi': true})
+    .classed({'hex': true})
     .style({fill: function (cell) {
-      if(cell.terrain>-1) {
-        return TERRAIN[cell.terrain].color;
+      if(cell.data.terrain>-1) {
+        return TERRAIN[cell.data.terrain].color;
       }
     }})
     .attr("d", function(cell){
       return drawCell(map,cell);
     })
+    .attr("title", function(cell){
+      return "Hex";
+    })
     .order()
-    .on("dblclick", function(){
-      //d3.selectAll(".voronoi").classed({'selected': false});
-      //d3.select(this).classed({'selected': true});
-      //d3.select(this).style({fill: "yellow"});
-      var vPoly = d3.select(this).datum();
-      console.log(this);
+    .on("click", function(){
+      var hex = d3.select(this).datum();
+      console.log(hex);
     });
+
+}
+
+hexPlaneMap.prototype.popDisplay = function () {
+	var svg = d3.select("svg");
+
+	var pop = svg.append("g").classed({'gPop': true})
+    .selectAll("circle")
+    .data(map.popData(), function(pop){
+      return cellCenter(map,pop);
+    })
+    .enter().append("circle")
+    .classed({'pop': true})
+	.attr("cx", function(pop){
+      return cellCenter(map,pop)[0];
+    })
+    .attr("cy", function(pop){
+      return cellCenter(map,pop)[1];
+    })
+    .attr("r", function(pop){
+      return pop.data.cmc;
+    })
+    .style({fill: function (pop) {
+    	return "red";
+    }})
+    .order()
+    .on("click", function(){
+		var sel = d3.select(this);
+  		sel.moveToFront();
+      	var pop = d3.select(this).datum();
+      	console.log(pop);
+    });
+
+	$('path.hex').tooltipsy({
+		content: function(cell) {
+			var data = cell[0].__data__.data;
+			var html="<strong>"+TERRAIN[data.terrain].name+"</strong>";
+			
+			if(Object.keys(data.pop).length != 0){
+				var pop = cell[0].__data__.data.pop;
+				for(var i=0;i<pop.types.length;i++) {
+					if(pop.types[i] == "sorcery" || pop.types[i] == "instant") {
+						html+="</br>Magic";
+					}
+					else {
+						html+="</br>"+pop.types[i].capFirst();	
+					}
+				}
+			}
+			
+			return html;
+		}
+	});
+
 }
 
 var Zone = function (map,i) {
@@ -520,6 +717,7 @@ var HCell = function (x,y,terrain,zone) {
   this.y = y;
   this.terrain = terrain;
   this.zone = -1;
+  this.pop = {};
 
   if(zone === "undefined") {
     this.zone = zone.id;
