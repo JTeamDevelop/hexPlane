@@ -23,6 +23,9 @@
 
 var TERRAIN = [{name:"Water",color:"blue"}, {name:"Mountains",color:"brown"},  {name:"Forest",color:"DarkGreen"}
   , {name:"Plains",color:"LightGreen"}, {name:"Desert",color:"Khaki"}];
+var CLIMATE = [{name:"Artic",color:"blue"}, {name:"Continental",color:"LightBlue"},  {name:"Temperate",color:"green"}
+    , {name:"Subtropical",color:"LightGreen"}, {name:"Tropical",color:"DarkGreen"}];
+
 
 d3.selection.prototype.moveToFront = function() {
   return this.each(function(){
@@ -37,106 +40,6 @@ d3.selection.prototype.moveToBack = function() {
 		}
 	});
 };
-
-//Basic http asynchronous request
-function httpGetAsync(theUrl, callback, rarity)
-{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText,rarity);
-    }
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous
-    xmlHttp.send(null);
-}
-
-//makes a unique id for various objects that is n characters long
-makeUID = function (n) {
-	n = typeof n === "undefined" ? 24 : n;
-	var text = "";
-	var possible = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
-
-	for( var i=0; i < n; i++ ){
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-
-   	return text;
-};
-
-RNG = function(seed){
-	this.seedrnd = typeof seed === "undefined" ? Math.random : new xor4096(seed);
-	this.random=this.seedrnd;
-
-};
-RNG.prototype.rndInt = function (min, max) {
-    return Number(Math.floor(this.seedrnd() * (max - min + 1)) + min);
-}
-RNG.prototype.multiRoll = function (min, max, num) {
-    var x=0;
-	for(var i=0;i<num;i++){
-		x+=this.rndInt(min, max);
-	}
-    return x;
-}
-RNG.prototype.FateRoll = function (){ return this.multiRoll (1, 3, 4)-8; }
-RNG.prototype.rndArray = function (array) {
-	if (!array.length) { return null; }
-	return array[Math.floor(this.RND() * array.length)];
-}
-// @returns {array} New array with randomized items
-RNG.prototype.shuffleAr = function (array) {
-  	var currentIndex = array.length, temporaryValue, randomIndex ;
-
-  	// While there remain elements to shuffle...
-  	while (0 !== currentIndex) {
-
-    	// Pick a remaining element...
-    	randomIndex = Math.floor(this.seedrnd() * currentIndex);
-    	currentIndex -= 1;
-
-    	// And swap it with the current element.
-    	temporaryValue = array[currentIndex];
-    	array[currentIndex] = array[randomIndex];
-    	array[randomIndex] = temporaryValue;
-  	}
-
-  	return array;
-}
-//random value map - min & max bound all ponts
-//bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
-RNG.prototype.RNDBias = function (min, max, bias, influence) {
-    var rnd = this.random() * (max - min) + min,   // random in range
-        mix = this.random() * influence;           // random mixer
-    return rnd * (1 - mix) + bias * mix;           // mix full range and bias
-}
-
-String.prototype.capFirst = function() {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-}
-
-Array.prototype.random = function (RNG) {
-	RNG = typeof RNG === "undefined" ? Math : RNG;
-  var i = RNG.random()*this.length;
-  return this[Math.floor(i)];
-}
-Array.prototype.unique = function() {
-    var a = this.concat();
-    for(var i=0; i<a.length; ++i) {
-        for(var j=i+1; j<a.length; ++j) {
-            if(a[i] === a[j])
-                a.splice(j--, 1);
-        }
-    }
-
-    return a;
-};
-
-function polygon(d) {
-  return "M" + d.join("L") + "Z";
-}
-function line(d) {
-  return "M" + d.join("L") + "Z";
-}
 
 cellCenter = function (map,pos) {
   var width = map._hexSize * 2, horiz = 0 , height = 0, vert = 0;
@@ -280,6 +183,7 @@ var hexPlaneMap = function (seed) {
   this.zones = [];
 }
 hexPlaneMap.prototype.random = function () {
+  this.name = nameGen(this.RNG).capFirst();
   var n = Math.floor(this.RNG.RNDBias(this._min, this._max, this._bias, this._influence));
   this._rndC = n;
 
@@ -296,6 +200,7 @@ hexPlaneMap.prototype.random = function () {
       this.addCell();
     }
     this.makeTerrain();
+    this.makeClimate();
   }
 
 	var map = this;
@@ -350,7 +255,7 @@ hexPlaneMap.prototype.rawcells = function () {
 hexPlaneMap.prototype.popData = function () {
   var pop = [], i=0;
   for (var c in this.cells) {
-  	if(Object.keys(this.cells[c].pop).length != 0){ 
+  	if(Object.keys(this.cells[c].pop).length != 0){
   		pop.push([this.cells[c].x,this.cells[c].y]);
     	pop[i].data = this.cells[c].pop;
     	i++;
@@ -361,7 +266,7 @@ hexPlaneMap.prototype.popData = function () {
 }
 //axial neighboors
 hexPlaneMap.prototype.neighboors = function (cell) {
-  //n will be all neighboors, o will be open cells
+  //n will be neighboors, o will be open cells
   var n = [], o=[], e={};
   for (var i = 0; i < 6; i++) {
     e = this.edge(cell,i)
@@ -464,6 +369,44 @@ hexPlaneMap.prototype.addCell = function () {
       }
     }
   }
+}
+hexPlaneMap.prototype.makeClimate = function () {
+  var map = this, cA=[], done=[], cell = "";
+
+  //put all the cells in an array for random selection
+  for(var x in this.cells) {
+    cA.push(x);
+  }
+
+  function initialize() {
+    //number of climate zones
+    var nz= map.RNG.rndInt(4,12);
+
+    for (var i = 0; i < nz; i++) {
+      //for each zone find a random cell
+      cell=cA.random(map.RNG);
+      done.push(cell);
+      //set climate of cell
+      map.cells[cell].climate=map.RNG.rndInt(0,4);
+      //remove the cell from the array so it can't be selected again
+      cA.remove(cell);
+    }
+  }
+
+  initialize();
+
+  var N = {};
+  while (cA.length > 0) {
+    cell = done.random(map.RNG);
+    N = map.neighboors(cell);
+    N = N.n.random(map.RNG);
+    if (N.ncell.climate == -1) {
+      N.ncell.climate = map.cells[cell].climate;
+      cA.remove(N.id);
+      done.push(N.id);
+    }
+  }
+
 }
 hexPlaneMap.prototype.makeTerrain = function () {
   //cA pushes index of all cells
@@ -589,9 +532,31 @@ hexPlaneMap.prototype.addZone = function () {
   this.zones.push(Z);
   return size;
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Display
+
+hexPlaneMap.prototype.key = function () {
+
+    var title = "<h2>Key</h2>", tkey="<div id=keyTerrain>", ckey="<div id=keyClimate>";
+    TERRAIN.forEach(function(T){
+    	tkey+="<div class=square style='background:"+T.color+"'></div>"+T.name+"</br>";
+    })
+	CLIMATE.forEach(function(C){
+    	ckey+="<div class=square style='background:"+C.color+"'></div>"+C.name+"</br>";
+    })
+    tkey+="</div>";
+    ckey+="</div>";
+
+    d3.select("#hexKey").append("div")
+      .attr("id", "TCKey")
+      .html(title+tkey+ckey);
+}
+
 hexPlaneMap.prototype.display = function () {
   var map = this;
   var svg = d3.select("#hexPlane").append("svg")
+  	.classed({'map': true})
     .attr("width", map._width)
     .attr("height", map._height);
 
@@ -603,10 +568,10 @@ hexPlaneMap.prototype.display = function () {
     .enter().append("path")
     .classed({'hex': true})
     .style({fill: function (cell) {
-      if(cell.data.terrain>-1) {
-        return TERRAIN[cell.data.terrain].color;
-      }
-    }})
+        if(cell.data.terrain>-1) {
+          return TERRAIN[cell.data.terrain].color;
+        }
+      }})
     .attr("d", function(cell){
       return drawCell(map,cell);
     })
@@ -619,10 +584,79 @@ hexPlaneMap.prototype.display = function () {
       console.log(hex);
     });
 
+	var hexClimate = svg.append("g").classed({'gClimate': true})
+    .selectAll("path")
+    .data(map.rawcells(), function(cell){
+      return drawCell(map,cell);
+    })
+    .enter().append("path")
+    .classed({'hex': true})
+    .style({fill: function (cell) {
+        if(cell.data.climate>-1) {
+          return CLIMATE[cell.data.climate].color;
+        }
+      }})
+    .attr("d", function(cell){
+      return drawCell(map,cell);
+    })
+    .attr("title", function(cell){
+      return "Hex";
+    })
+    .order()
+    .on("click", function(){
+      var hex = d3.select(this).datum();
+      console.log(hex);
+    });
+
+    var hinfo = "<h1>"+this.name+"</h1>";
+    hinfo+="<strong>Seed: </strong>"+this.uid;
+    hinfo+="<h3>Views</h3><span class=selView id=selClimate>Climate</span></br><span class='selView selected' id=selPop>Population</span>";
+    hinfo+="</br><span class='selView selected' id=selRuins>Ruins</span>";
+
+    d3.select("#hexKey").append("div")
+      .attr("id", "pInfo")
+      .html(hinfo);
+
+	//add functionality to change views
+	d3.selectAll(".selView").on("click",function(){
+		var sel = d3.select(this);
+		var state = sel.classed("selected");
+		var id = sel.attr("id");
+		//togles the climate views on and off
+		if(id == "selClimate"){
+			if(state) {
+				d3.select(".gClimate").style({opacity:0});
+				d3.select(".gHex").style({opacity:1});
+				d3.select("#keyTerrain").style({display:"inline"});
+				d3.select("#keyClimate").style({display:"none"});
+			}
+			else {
+				d3.select(".gClimate").style({opacity:1});
+				d3.select(".gHex").style({opacity:0});
+				d3.select("#keyTerrain").style({display:"none"});
+				d3.select("#keyClimate").style({display:"inline"});
+			}
+		}
+		else if (id=="selPop") {
+			if(state) {
+				d3.select(".gPop").style({opacity:0});
+			}
+			else {
+				d3.select(".gPop").style({opacity:1});
+			}
+		}
+		else {
+		}
+
+		//toggle selected class
+		sel.classed("selected", !sel.classed("selected"));
+	});
+
+	map.key();
 }
 
 hexPlaneMap.prototype.popDisplay = function () {
-	var svg = d3.select("svg");
+	var svg = d3.select(".map");
 
 	var pop = svg.append("g").classed({'gPop': true})
     .selectAll("circle")
@@ -655,7 +689,8 @@ hexPlaneMap.prototype.popDisplay = function () {
 		content: function(cell) {
 			var data = cell[0].__data__.data;
 			var html="<strong>"+TERRAIN[data.terrain].name+"</strong>";
-			
+			html+="</br>"+CLIMATE[data.climate].name;
+
 			if(Object.keys(data.pop).length != 0){
 				var pop = cell[0].__data__.data.pop;
 				for(var i=0;i<pop.types.length;i++) {
@@ -663,16 +698,18 @@ hexPlaneMap.prototype.popDisplay = function () {
 						html+="</br>Magic";
 					}
 					else {
-						html+="</br>"+pop.types[i].capFirst();	
+						html+="</br>"+pop.types[i].capFirst();
 					}
 				}
 			}
-			
+
 			return html;
 		}
 	});
 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var Zone = function (map,i) {
   this.map=map;
@@ -716,6 +753,7 @@ var HCell = function (x,y,terrain,zone) {
   this.x = x;
   this.y = y;
   this.terrain = terrain;
+  this.climate = -1;
   this.zone = -1;
   this.pop = {};
 
