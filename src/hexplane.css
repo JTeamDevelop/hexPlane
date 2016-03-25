@@ -1,3 +1,7 @@
+h1, h2, h3 {
+  margin: 0;
+}
+
 #hexPlane {
   position:fixed;
   top:15px;
@@ -5,19 +9,44 @@
   left:1%;
   right:1%;
 }
-#pInfo {
-  position: absolute;
+#hexKey {
+  position:absolute;
   top: -5px;
   left: 5px;
+}
+
+.gClimate {
+  opacity: 0;
+}
+
+#pInfo {
   padding: .5em;
   border: 1px solid black;
 }
-#pInfo h1 {
-  margin: 0;
+#pInfo h3{
+  margin: 0.4em 0;
+}
+
+#TCKey {
+  padding: .5em;
+  border: 1px solid black;	
+}
+
+#keyClimate {
+  display: none;
+}
+
+
+.selView {
+  cursor: pointer;
+}
+
+.selView.selected{
+  text-decoration: underline;
+  color: green;
 }
 
 path {
-  stroke: #fff;
 }
 
 circle {
@@ -36,4 +65,11 @@ circle {
     color: #303030;
     background-color: #f5f5b5;
     border: 1px solid #deca7e;
+}
+
+.square {
+  	width: 10px;
+	height: 10px;
+	margin-right: 5px;
+	display: inline-block;
 }

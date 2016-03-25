@@ -532,9 +532,31 @@ hexPlaneMap.prototype.addZone = function () {
   this.zones.push(Z);
   return size;
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Display
+
+hexPlaneMap.prototype.key = function () {
+
+    var title = "<h2>Key</h2>", tkey="<div id=keyTerrain>", ckey="<div id=keyClimate>";
+    TERRAIN.forEach(function(T){
+    	tkey+="<div class=square style='background:"+T.color+"'></div>"+T.name+"</br>";
+    })
+	CLIMATE.forEach(function(C){
+    	ckey+="<div class=square style='background:"+C.color+"'></div>"+C.name+"</br>";
+    })
+    tkey+="</div>";
+    ckey+="</div>";
+
+    d3.select("#hexKey").append("div")
+      .attr("id", "TCKey")
+      .html(title+tkey+ckey);
+}
+
 hexPlaneMap.prototype.display = function () {
   var map = this;
   var svg = d3.select("#hexPlane").append("svg")
+  	.classed({'map': true})
     .attr("width", map._width)
     .attr("height", map._height);
 
@@ -562,17 +584,79 @@ hexPlaneMap.prototype.display = function () {
       console.log(hex);
     });
 
+	var hexClimate = svg.append("g").classed({'gClimate': true})
+    .selectAll("path")
+    .data(map.rawcells(), function(cell){
+      return drawCell(map,cell);
+    })
+    .enter().append("path")
+    .classed({'hex': true})
+    .style({fill: function (cell) {
+        if(cell.data.climate>-1) {
+          return CLIMATE[cell.data.climate].color;
+        }
+      }})
+    .attr("d", function(cell){
+      return drawCell(map,cell);
+    })
+    .attr("title", function(cell){
+      return "Hex";
+    })
+    .order()
+    .on("click", function(){
+      var hex = d3.select(this).datum();
+      console.log(hex);
+    });
+
     var hinfo = "<h1>"+this.name+"</h1>";
     hinfo+="<strong>Seed: </strong>"+this.uid;
-    hinfo+="<h3>Views</h3><span>Climate</span></br><span>Population</span></br><span>Ruins</span>";
+    hinfo+="<h3>Views</h3><span class=selView id=selClimate>Climate</span></br><span class='selView selected' id=selPop>Population</span>";
+    hinfo+="</br><span class='selView selected' id=selRuins>Ruins</span>";
 
-    d3.select("#hexPlane").append("div")
+    d3.select("#hexKey").append("div")
       .attr("id", "pInfo")
       .html(hinfo);
+
+	//add functionality to change views
+	d3.selectAll(".selView").on("click",function(){
+		var sel = d3.select(this);
+		var state = sel.classed("selected");
+		var id = sel.attr("id");
+		//togles the climate views on and off
+		if(id == "selClimate"){
+			if(state) {
+				d3.select(".gClimate").style({opacity:0});
+				d3.select(".gHex").style({opacity:1});
+				d3.select("#keyTerrain").style({display:"inline"});
+				d3.select("#keyClimate").style({display:"none"});
+			}
+			else {
+				d3.select(".gClimate").style({opacity:1});
+				d3.select(".gHex").style({opacity:0});
+				d3.select("#keyTerrain").style({display:"none"});
+				d3.select("#keyClimate").style({display:"inline"});
+			}
+		}
+		else if (id=="selPop") {
+			if(state) {
+				d3.select(".gPop").style({opacity:0});
+			}
+			else {
+				d3.select(".gPop").style({opacity:1});
+			}
+		}
+		else {
+		}
+
+		//toggle selected class
+		sel.classed("selected", !sel.classed("selected"));
+	});
+
+	map.key();
 }
 
 hexPlaneMap.prototype.popDisplay = function () {
-	var svg = d3.select("svg");
+	var svg = d3.select(".map");
 
 	var pop = svg.append("g").classed({'gPop': true})
     .selectAll("circle")
@@ -605,6 +689,7 @@ hexPlaneMap.prototype.popDisplay = function () {
 		content: function(cell) {
 			var data = cell[0].__data__.data;
 			var html="<strong>"+TERRAIN[data.terrain].name+"</strong>";
+			html+="</br>"+CLIMATE[data.climate].name;
 
 			if(Object.keys(data.pop).length != 0){
 				var pop = cell[0].__data__.data.pop;
@@ -623,6 +708,8 @@ hexPlaneMap.prototype.popDisplay = function () {
 	});
 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var Zone = function (map,i) {
   this.map=map;
