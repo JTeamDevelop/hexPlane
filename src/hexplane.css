@@ -5,6 +5,16 @@
   left:1%;
   right:1%;
 }
+#pInfo {
+  position: absolute;
+  top: -5px;
+  left: 5px;
+  padding: .5em;
+  border: 1px solid black;
+}
+#pInfo h1 {
+  margin: 0;
+}
 
 path {
   stroke: #fff;
