@@ -38,6 +38,14 @@ RNG.prototype.multiRoll = function (min, max, num) {
 	}
     return x;
 }
+RNG.prototype.TrueFalse = function (){
+  if (this.random()>.5) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 RNG.prototype.FateRoll = function (){ return this.multiRoll (1, 3, 4)-8; }
 RNG.prototype.rndArray = function (array) {
 	if (!array.length) { return null; }
@@ -74,6 +82,14 @@ String.prototype.capFirst = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
+Array.prototype.contains = function (item) {
+  if (this.indexOf(item)>-1) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
 Array.prototype.remove = function (item) {
   var i = this.indexOf(item);
   this.splice(i,1);
@@ -101,6 +117,20 @@ function polygon(d) {
 function line(d) {
   return "M" + d.join("L") + "Z";
 }
+
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
+d3.selection.prototype.moveToBack = function() {
+	return this.each(function() {
+		var firstChild = this.parentNode.firstChild;
+		if (firstChild) {
+			this.parentNode.insertBefore(this, firstChild);
+		}
+	});
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
