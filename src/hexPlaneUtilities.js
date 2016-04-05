@@ -82,6 +82,15 @@ String.prototype.capFirst = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
+Array.prototype.count = function (item) {
+  var count = 0;
+  for(var i = 0; i < this.length; ++i){
+      if(this[i] == item){
+        count++;
+      }
+  }
+  return count;
+};
 Array.prototype.contains = function (item) {
   if (this.indexOf(item)>-1) {
     return true;
