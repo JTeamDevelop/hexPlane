@@ -23,6 +23,15 @@ makeUID = function (n) {
    	return text;
 };
 
+objExists = function (obj) {
+  if (typeof obj === "undefined") {
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
 RNG = function(seed){
 	this.seedrnd = typeof seed === "undefined" ? Math.random : new xor4096(seed);
 	this.random=this.seedrnd;
@@ -47,6 +56,13 @@ RNG.prototype.TrueFalse = function (){
   }
 }
 RNG.prototype.FateRoll = function (){ return this.multiRoll (1, 3, 4)-8; }
+RNG.prototype.rndColor = function () {
+  var R = this;
+  function randHex() {
+      return (Math.floor(R.random() * 206) + 50).toString(16);
+  }
+  return randHex() + "" + randHex() + "" + randHex();
+}
 RNG.prototype.rndArray = function (array) {
 	if (!array.length) { return null; }
 	return array[Math.floor(this.RND() * array.length)];
@@ -172,3 +188,77 @@ function nameGen(RNG){
 
     return name;
 }
+
+NameGenerator = function (RNG) {
+
+    // Syllables shamelessly stolen from elite
+    var syllables = 'folexegezacebisousesarmaindireaeratenberalavetiedorquanteisrion',
+        vocals = 'aeiou';
+
+    // Some improvements
+    var vocalMustFollow = 'tdbr',
+        notFollowdBySelf = 'rstie',
+        onlyAtStart = 'xyz',
+        badSoundStart = ['xc', 'rc', 'bf', 'qc', 'fc', 'vr', 'vc'],
+        badSoundMiddle = ['eo', 'ou', 'ae', 'ea', 'sr', 'sg', 'sc', 'nv', 'ng', 'sb', 'sv'];
+
+    function isValid(previous, next) {
+
+        var pa = previous[0],
+            pb = previous[1],
+            na = next[0];
+
+        if (
+            // Block out eveything that's too similar by comparing the initial
+            // characters
+               (Math.abs(pa.charCodeAt(0) - na.charCodeAt(0)) === 1)
+
+            // Prevent specific letter doubles in the middle of the "word"
+            || (notFollowdBySelf.indexOf(pb) !== -1 && pb === na)
+
+            // A vocal must follow the last character of the previous syllable
+            || (vocalMustFollow.indexOf(pb) !== -1 && vocals.indexOf(na) === -1)
+
+            // Block the second syllable in case it's initial character can only
+            // occur at the start
+            || (onlyAtStart.indexOf(na) !== -1)
+
+            // Block other combinations which simply do not sound very well
+            || (badSoundStart.indexOf(pa + na) !== -1)
+
+            // Block other combinations which simply do not sound very well
+            || (badSoundMiddle.indexOf(pb + na) !== -1)
+
+            // Block double syllable pairs
+            || (previous === next)) {
+
+            return false;
+
+        } else {
+            return true;
+        }
+
+    }
+
+    // Name generator
+    var str = '',
+        previous = null,
+        next,
+        syllableIndex = 0,
+        l = [1,2,2,2,2,3,3,3,3,3,3,3,3,4,5];
+        i = 0;
+
+    l=l.random(RNG);
+    while(i < l) {
+      syllableIndex = RNG.rndInt(0,syllables.length-2);
+      next = syllables.substr(syllableIndex, 2);
+
+      if (!previous || isValid(previous, next)) {
+        str += next;
+        previous = next;
+        i++;
+      }
+    }
+
+    return str.capFirst();
+};
