@@ -38,53 +38,12 @@ mapRaces = function (rarity,RNG) {
   return races[rarity].random(RNG);
 }
 /////////////////////////////////////////////////////////////////////////////////
-//Functions to populate the hexPlane
-//This pulls a set of MTG cards to help with random generation of races
-hexPlaneMap.prototype.newPopulation = function () {
-  var map = this;
-	var rarity = ["common","uncommon","rare","mythic"];
-	var d = [
-		["Alara",["Shards of Alara","ALA",101,60,53,15],["Conflux","CON",60,40,35,10],["Alara Reborn","ARB",60,40,35,10]],
-		["Zendikar",["Zendikar","ZEN",101,60,53,15],["Worldwake","WWK",60,40,35,10],["Rise of the Eldrazi","ROE",100,60,53,15]]
-	];
-	var b = [
-		["Magic 2010","M10",101,60,53,15],
-		["Magic 2011","M11",101,60,53,15]
-	];
 
-	var cd = d.random(map.RNG), cb = b.random(map.RNG);
 
-	var pop = {c:[],u:[],r:[],m:[],n:0,i:0}, url='https://api.deckbrew.com/mtg/cards?set=', curl='';
-	function loadPop (data,rarity){
-		data = JSON.parse(data);
-		pop[rarity[0]] = pop[rarity[0]].concat(data);
-		pop.i++;
-		if(pop.n==pop.i){
-      map._set = pop;
-      map.populate();
-		}
-	}
-
-	for(var i=1; i<cd.length;i++) {
-		curl = url+cd[i][1];
-		for(var j=0; j<4; j++){
-			for(var k=0; k<cd[i][2+j]/100; k++){
-				httpGetAsync(curl+'&rarity='+rarity[j]+'&page='+k, loadPop,rarity[j]);
-				pop.n++;
-			}
-		}
-	}
-
-	curl = url+cb[1];
-	for(var j=0; j<4; j++){
-		for(var k=0; k<cb[2+j]/100; k++){
-			httpGetAsync(curl+'&rarity='+rarity[j]+'&page='+k, loadPop,rarity[j]);
-			pop.n++;
-		}
-	}
-
-}
+/////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
+//Functions to populate the hexPlane
+
 //Actually populates map - creates cultures, sites and ruins based upon the number of hexes
 hexPlaneMap.prototype.populate = function () {
 	var map=this, cA=this.cellArray(), cPop=[], ruins=[], cell="", r="", card ={}, track={r:0,s:0};
@@ -92,6 +51,9 @@ hexPlaneMap.prototype.populate = function () {
   //Load population and sites
 	var n = Math.round(this._rndC/10);
   while(cPop.length <n)  {
+    if(cPop.length==n/2){
+      var n = noty({layout: 'center', type: 'success', timeout: 500, text: 'Almost done.'});
+    }
     //random cell
     cell = cA.random(this.RNG);
     if(cPop.contains(cell)){
@@ -99,11 +61,11 @@ hexPlaneMap.prototype.populate = function () {
     }
     cPop.push(cell);
     //pull a random card
-    card = this.newCard();
+    card = newCard(this.RNG);
     //if it isn't a land
     if(card.rarity!="l"){
       //test if the card is a creature
-      if(card.types.indexOf("creature")>-1) {
+      if(card.tags.contains("creature")) {
         if(map.RNG.random() <0.8) {
           this.newRace(card,cell);
           track.r++;
@@ -139,7 +101,7 @@ hexPlaneMap.prototype.populate = function () {
     if(ruins.indexOf(cell) == -1){
       ruins.push(cell);
       //load a random card
-      card = this.newCard();
+      card = newCard(this.RNG);
       this.newRuin(card,cell);
     }
   }
@@ -155,6 +117,7 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
   cid = typeof cid === "undefined" ? this.noPopCell() : cid;
   var race = mapRaces(card.rarity,this.RNG), map = this, cell = map.cells[cid];
 
+  /*
   var alltags = [], tlist = ["types","supertypes","subtypes"];
   for (var i = 0; i < tlist.length; i++) {
     if(card[tlist[i]].length>0){
@@ -162,17 +125,18 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
     }
   }
   alltags.unique();
+  */
 
   var tags=[];
-  if(alltags.contains("enchantment") || alltags.contains("sorcery") || alltags.contains("instant")) {
+  if(card.tags.contains("power")) {
     tags.push(this.colorTags(card).random(this.RNG));
   }
 
-  if(alltags.contains("legendary") || alltags.contains("planeswalker")) {
+  if(card.tags.contains("legendary") || card.tags.contains("superhero")) {
     tags.push("Superhero");
   }
 
-  if(alltags.contains("land")) {
+  if(card.tags.contains("land")) {
     this.cells[cid].tags.push("Resource");
   }
 
@@ -184,7 +148,7 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
     aggro:map.RNG.FateRoll(),
     tags:tags,
     colors:card.colors,
-    size:card.cmc,
+    size:card.power,
     name:map.RNG.rndName(),
     stats:map.RNG.shuffleAr(stats.random(map.RNG)),
     hexcolor:map.RNG.rndColor()
@@ -255,6 +219,6 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
     }
   }
 
-  this._population[pop.name]=pop;
+  this._people[pop.name]=pop;
   this.empireExpand(eid);
 }

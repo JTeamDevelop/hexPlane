@@ -93,7 +93,7 @@ hexPlaneMap.prototype.empireExpand = function (eid) {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////
 hexPlaneMap.prototype.empireDoom = function (eid) {
-  var empire = this._population[eid].empire, doom=false;
+  var empire = this._empires[eid], doom=false;
   for (var i = 0; i < empire.pop.length; i++) {
     if(this.cells[empire.cells[i]].tags.contains("Doom")){
       doom = true;
@@ -102,7 +102,7 @@ hexPlaneMap.prototype.empireDoom = function (eid) {
   return doom;
 }
 hexPlaneMap.prototype.empireNeighboors = function (eid) {
-  var empire = this._population[eid].empire, nC=[], N=[];
+  var empire = this._empires[eid], nC=[], N=[];
   for (var i = 0; i < empire.cells.length; i++) {
     nC = this.neighboors(empire.cells[i]);
     for (var j = 0; j < nC.length; j++) {
@@ -112,7 +112,7 @@ hexPlaneMap.prototype.empireNeighboors = function (eid) {
         }
       }
       else {
-        if(objExists(map._population[nC[j].id])) {
+        if(objExists(map._people[nC[j].id])) {
           N.push(nC[j].id);
         }
       }
@@ -124,7 +124,7 @@ hexPlaneMap.prototype.empireNeighboors = function (eid) {
 hexPlaneMap.prototype.empireAggro = function (eid) {
   var empire = this._empires[eid], aggro=-8, pop={};
   for (var i = 0; i < empire.pop.length; i++) {
-    pop = this._population[empire.pop[i]];
+    pop = this._people[empire.pop[i]];
     if(pop.aggro>aggro) {
       aggro = pop.aggro;
     }
@@ -133,19 +133,19 @@ hexPlaneMap.prototype.empireAggro = function (eid) {
   return aggro;
 }
 hexPlaneMap.prototype.empirePop = function (eid) {
-  var empire = this._population[eid].empire, pop={};
+  var empire = this._empires[eid], pop={};
   for (var i = 0; i < empire.cells.length; i++) {
-    if(typeof this._population[empire.cells[i]] !== "undefined"){
-      pop[empire.cells[i]] = this._population[empire.cells[i]];
+    if(typeof this._people[empire.cells[i]] !== "undefined"){
+      pop[empire.cells[i]] = this._people[empire.cells[i]];
     }
   }
   return pop;
 }
 hexPlaneMap.prototype.empirePopColors = function (eid) {
-  var empire = this._population[eid].empire, colors=[];
+  var empire = this._empires[eid].empire, colors=[];
   for (var i = 0; i < empire.cells.length; i++) {
-    if(typeof this._population[empire.cells[i]] !== "undefined"){
-      colors = colors.concat(this._population[empire.cells[i]].colors);
+    if(typeof this._people[empire.cells[i]] !== "undefined"){
+      colors = colors.concat(this._people[empire.cells[i]].colors);
     }
   }
   return colors;
