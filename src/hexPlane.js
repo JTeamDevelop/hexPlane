@@ -29,6 +29,8 @@ var COLORS = ["red","green","blue","white","black"];
 var HTMLCOLOR = ["AntiqueWhite","Blue","Brown","Chartreuse","Chocolate","Coral","Crimson","Cyan","DarkBlue","DarkGreen"
     ,"Orange","DarkViolet","DeepPink","Gold","Green","Indigo","DeepSkyBlue","Lime","MediumPurple","OrangeRed","Orchid"
     ,"Purple","Red","Yellow"];
+var NATIONSAVE = {"Disorder":["Guard","Barracks"], "Uprising":["Army","Army"], "Poverty":["Merchant","Market"]
+    , "Ignorance":["Scholar","School"], "Despair":["Minister","Church"], "Corruption":["Magistrate","Court"]};
 var TROUBLE = [{name:"Ancient Curse",overcome:["Wealth","Ignorance"]},{name:"Angry Dead",overcome:["Military","Uprising"]}
     ,{name:"Bad Reputation",overcome:["Social","Corruption"]},{name:"Barren Surroundings",overcome:["Wealth","Poverty"]}
     ,{name:"Class Hatred",overcome:["Social","Despair"]},{name:"Conquering Heirs",overcome:["Military","Uprising"]}
@@ -52,48 +54,6 @@ var TROUBLE = [{name:"Ancient Curse",overcome:["Wealth","Ignorance"]},{name:"Ang
     ,{name:"Xenophobia",overcome:["Military","Disorder"]}
   ];
 
-function rndCard(RNG) {
-
-
-}
-
-mapRaces = function (rarity,RNG) {
-  var monstrous = ["Nightelf","Orc","Goblin","Hobgoblin","Ogre","Troll","Gnoll","Minotaur","Lizardman"];
-  var smallfolk = ["Gnome","Halfling","Kobold"];
-  var demi = ["Elf","Elf","Dwarf","Dwarf",smallfolk.random(RNG),monstrous.random(RNG),"Genasi","Merfolk","Naga"];
-  var lycanthrope = ["Werewolf","Wereboar","Wererat","Weretiger","Werebear","Wereraven"];
-
-  function hybrid (RNG) {
-    var type = ["Ape","Badger","Bat","Bear","Beetle","Boar","Cat","Cetnipede","Crab","Crocodile","Deer","Dog","Eagle","Elephant",
-        "Frog","Goat","Horse","Lion","Mantis","Octopus","Owl","Panther","Rat","Raven","Rhinoceros","Scorpion","Shark","Snake",
-        "Spider","Tiger","Vulture","Wasp","Weasel","Wolf"];
-
-    return type.random(RNG)+"-man";
-  }
-
-  function profs (RNG) {
-      var type = ["Mystic Knight","Wizard","Priest","Monk"];
-      return type.random(RNG);
-  }
-
-  function rareCombined(RNG) {
-    var base = [demi.random(RNG),monstrous.random(RNG),hybrid(RNG)];
-    return base.random(RNG)+" "+profs(RNG);
-  }
-
-  var races = {
-      c:["Human",demi.random(RNG)],
-      u:[demi.random(RNG),monstrous.random(RNG),hybrid(RNG),profs(RNG)],
-      r:["Aboleth","Dragon","Dragon","Elementals","Giant","Golem","Treant",rareCombined(RNG),rareCombined(RNG)],
-      m:["Dragon Clan","Elemental Conflux","Demigods","Kaiju"]
-  };
-
-  if(rarity=="l"){
-    rarity = "u";
-  }
-
-  return races[rarity].random(RNG);
-}
 
 cellCenter = function (map,pos) {
   var width = map._hexSize * 2, horiz = 0 , height = 0, vert = 0;
@@ -149,49 +109,6 @@ drawCell = function (map,pos) {
   return polygon(d);
 }
 
-function population(map) {
-	var rarity = ["common","uncommon","rare","mythic"];
-	var d = [
-		["Alara",["Shards of Alara","ALA",101,60,53,15],["Conflux","CON",60,40,35,10],["Alara Reborn","ARB",60,40,35,10]],
-		["Zendikar",["Zendikar","ZEN",101,60,53,15],["Worldwake","WWK",60,40,35,10],["Rise of the Eldrazi","ROE",100,60,53,15]]
-	];
-	var b = [
-		["Magic 2010","M10",101,60,53,15],
-		["Magic 2011","M11",101,60,53,15]
-	];
-
-	var cd = d.random(map.RNG), cb = b.random(map.RNG);
-
-	var pop = {c:[],u:[],r:[],m:[],n:0,i:0}, url='https://api.deckbrew.com/mtg/cards?set=', curl='';
-	function loadPop (data,rarity){
-		data = JSON.parse(data);
-		pop[rarity[0]] = pop[rarity[0]].concat(data);
-		pop.i++;
-		if(pop.n==pop.i){
-			map.populate(pop);
-		}
-	}
-
-	for(var i=1; i<cd.length;i++) {
-		curl = url+cd[i][1];
-		for(var j=0; j<4; j++){
-			for(var k=0; k<cd[i][2+j]/100; k++){
-				httpGetAsync(curl+'&rarity='+rarity[j]+'&page='+k, loadPop,rarity[j]);
-				pop.n++;
-			}
-		}
-	}
-
-	curl = url+cb[1];
-	for(var j=0; j<4; j++){
-		for(var k=0; k<cb[2+j]/100; k++){
-			httpGetAsync(curl+'&rarity='+rarity[j]+'&page='+k, loadPop,rarity[j]);
-			pop.n++;
-		}
-	}
-
-}
-
 function rarity(RNG) {
 	var r= ["r","r","r","r","r","r","r","m"];
 	var b= ["l","c","c","c","c","c","c","c","c","c","c","u","u","u",r.random(RNG)];
@@ -231,10 +148,20 @@ var hexPlaneMap = function (seed) {
 
   this._set={};
   this.cells = {};
-  this._popTracker = {n:0};
   this._population={};
-  this.zones = [];
+  this._empires={};
+  this._zones = [];
   this._doomTracker=[];
+  this._time=[0,0,0];
+}
+hexPlaneMap.prototype.noPopCell = function () {
+  var cA = [];
+  for (var x in this.cells) {
+    if(!objExists(this.cells[x].pop)){
+      cA.push(x);
+    }
+  }
+  return cA.random(this.RNG);
 }
 hexPlaneMap.prototype.cellArray = function () {
   var cA = [];
@@ -263,9 +190,6 @@ hexPlaneMap.prototype.random = function () {
     this.makeTerrain();
     this.makeClimate();
   }
-
-	var map = this;
-  	var rpop = population(map);
 
 }
 //doom function, gives the current doom level d, and the nature of the doom - what is its goal
@@ -313,87 +237,76 @@ hexPlaneMap.prototype.colorTags = function (card) {
   }
   return tags;
 }
-hexPlaneMap.prototype.makeAssets = function (tags,taglist,aggro) {
-  var tag = tags.tags.random(this.RNG), nature = [], armyn = taglist.count("Army");
+hexPlaneMap.prototype.makeAssets = function (cell,aggro) {
+  var map=this, cid = cell.x+","+cell.y, N = this.neighboors(cid), armyn = cell.pop.assets.count("Army");
 
-  if(COLORS.contains(tag)){
-    nature=this.colorTags({cmc:1,colors:[tag]});
-  }
-  else if(tag == "artifact"){
-    nature=["Foundry","Tech","Industry","Fortified"];
-  }
-  else if(tag == "creature"){
-    nature = ["Militia","Population","Army","Army","Army","Army"];
-  }
-  else if(tag == "enchantment"){
-    nature = ["Temple","School","Insdustry","Foundry","Lab"];
-  }
-  else if(tag == "sorcery"){
-    nature = ["Tower","Monastery","Library"];
-  }
-  else if(tag == "instant"){
-    nature = ["Temple","School","Insdustry","Foundry","Lab"];
-  }
-  else if(tag == "legendary"){
-    nature = ["Legendary"];
-  }
-  else if(tag == "planeswalker"){
-    nature = ["Demigod","Hero"];
-  }
-  else {
-    nature = this.colorTags({cmc:1,colors:[tags.colors.random(this.RNG)]});
-  }
-
-  if(tag == "Army" && aggro+1 < armyn) {
-    nature = this.colorTags({cmc:1,colors:[tags.colors.random(this.RNG)]});
-  }
-
-  return nature.random(this.RNG);
-}
-hexPlaneMap.prototype.newRace = function (card,cell) {
-  var race = mapRaces(card.rarity,this.RNG), map = this;
-
-  if(typeof this._popTracker[race] === "undefined") {
-    this._popTracker[race] = 1;
-  }
-  else {
-    this._popTracker[race]++;
-  }
-  this._popTracker.n++;
-
-  var tags = [], tlist = ["types","colors","supertypes","subtypes"];
-  for (var i = 0; i < tlist.length; i++) {
-    if(card[tlist[i]].length>0){
-      tags = tags.concat(card[tlist[i]]);
+  //Determine if the cell is next to water or is water itself.
+  var water = false;
+  for (var i = 0; i < N.length; i++) {
+    if(N[i].ncell.terrain == 0) {
+      water = true;
     }
   }
-  tags.unique();
-
-  var pop = {
-    race: race,
-    rarity:card.rarity,
-    aggro:this.RNG.FateRoll(),
-    tags:tags,
-    colors:card.colors,
-    size:card.cmc,
-    pow:card.power,
-    tough:card.toughness
-  };
-
-  //artifact chance
-  if(this.RNG.random()<0.02) {
-    pop.artifact=[this.makeArtifact()];
-    this.cells[cell].tags.push("Artifact");
+  if(cell.terrain == 0) {
+    water = true;
   }
 
-  //if there is black there is doom
-  if(card.colors.contains("black")) {
-    pop.doom=this.makeDoom(cell);
+  var basic = ["Barracks","Church","Court","Market","Industry","School"];
+  if(water) {
+    basic.push("Harbor");
   }
 
-  this._population[cell]=pop;
-  this.cells[cell].pop = {size:pop.size};
+  if(armyn < aggro+1) {
+    basic = basic.concat(["Army","Army"]);
+  }
 
+  var special = ["Foundry","Fortified","Weaponsmiths","Armorsmiths","Lab","Militia","Tower","Monastery","Library","Demigod"];
+  if(water) {
+    special.push("Shipyard");
+  }
+
+  var colors= []
+  if(typeof this._population[cid] !== "undefined"){
+    colors = this._population[cid].colors;
+  }
+  else {
+    colors = this.empirePopColors(cell.empire);
+  }
+
+  if(typeof cell.site !== "undefined"){
+    colors = colors.concat(cell.site.colors);
+  }
+  if(typeof cell.ruin !== "undefined"){
+    colors = colors.concat(cell.ruin.colors);
+  }
+
+  var colorTag= map.colorTags({cmc:1,colors:colors}).random(map.RNG);
+
+  var select = [basic.random(map.RNG),basic.random(map.RNG),basic.random(map.RNG),basic.random(map.RNG),special.random(map.RNG),colorTag];
+  select = select.random(map.RNG);
+
+  if(cell.pop.assets.count(select)<2){
+    cell.pop.assets.push(select);
+  }
+  else {
+    if(this.RNG.random<0.15) {
+      cell.pop.assets.push(select);
+    }
+    else {
+      this.makeAssets(cell,aggro);
+    }
+  }
+}
+hexPlaneMap.prototype.newResource = function (card,cid) {
+  var cell = this.cells[cid];
+  var R = {
+    "white":[],
+    "blue":[],
+    "green":[],
+    "red":[],
+    "black":[],
+    "gray":[]
+  }
 }
 hexPlaneMap.prototype.newSite = function (card,cell) {
   var tags = [];
@@ -446,7 +359,7 @@ hexPlaneMap.prototype.newSite = function (card,cell) {
   }
 
   //if there is black there is doom
-  if(card.colors.contains("black")) {
+  if(this.RNG.random()<0.15) {
     site.doom=this.makeDoom(cell);
   }
 
@@ -479,7 +392,6 @@ hexPlaneMap.prototype.newRuin = function (card,cell) {
   }
 
   if(card.types.contains("land") || tags.contains("Mine")) {
-    tags.push("Resource");
     this.cells[cell].tags.push("Resource");
   }
 
@@ -518,7 +430,7 @@ hexPlaneMap.prototype.newRuin = function (card,cell) {
   this.cells[cell].tags.push("Artifact");
 
   //if there is black there is doom
-  if(card.colors.contains("black")) {
+  if(this.RNG.random()<0.15) {
     ruin.doom=this.makeDoom(cell);
   }
 
@@ -561,129 +473,36 @@ hexPlaneMap.prototype.newCard = function () {
 
   return card;
 }
-hexPlaneMap.prototype.populate = function (rpop) {
-  this._set = rpop;
-	var map=this, cA=this.cellArray(), cPop=[], ruins=[], cell="", r="", card ={}, tracker={l:0,c:0,u:0,r:0,m:0,a:0};
-
-  //Load population and sites
-	var n = Math.round(this._rndC/10);
-	while (cPop.length < n){
-    //random cell
-		cell = cA.random(this.RNG);
-    //no overlap of sites - must be unique cells
-		if(cPop.indexOf(cell) == -1){
-      cPop.push(cell);
-      //pull a random card
-      card = this.newCard();
-      //if it isn't a land
-			if(card.rarity!="l"){
-        //test if the card is a creature
-        if(card.types.indexOf("creature")>-1) {
-          if(map.RNG.random() <0.8) {
-            this.newRace(card,cell);
-          }
-          else {
-            this.newSite(card,cell);
-          }
-        }
-        else {
-          //otherwise 50/50 chance of a race
-          if(map.RNG.TrueFalse()){
-            this.newRace(card,cell);
-          }
-          else {
-            this.newSite(card,cell);
-          }
-        }
-			}
-      else {
-        this.newSite(card,cell);
-      }
-			tracker[card.rarity]++;
-      if(card.types.contains("artifact")) {
-        tracker.a++;
-      }
-		}
-	}
-
-  //Ruins
-  var n = Math.round(this._rndC/100);
-  while (ruins.length < n){
-    cell = cA.random(this.RNG);
-    if(ruins.indexOf(cell) == -1){
-      ruins.push(cell);
-      //load a random card
-      card = this.newCard();
-      this.newRuin(card,cell);
-      tracker[card.rarity]++;
-      if(card.types.contains("artifact")) {
-        tracker.a++;
-      }
-    }
-  }
-
-	console.log(tracker);
-  console.log(this._popTracker);
-	this.empires();
-  this.troubles();
-  this.assets();
-  this.popDisplay();
-  delete this._set;
-}
-hexPlaneMap.prototype.empireTags = function (eid) {
-  var empire = this.empires[eid], tags=[], colors=[];
-  for (var i = 0; i < empire.cells.length; i++) {
-    if(typeof this._population[empire.cells[i]] !== "undefined"){
-      tags = tags.concat(this._population[empire.cells[i]].tags);
-      colors = colors.concat(this._population[empire.cells[i]].colors);
-    }
-    if(typeof this.cells[empire.cells[i]].site !== "undefined"){
-      tags = tags.concat(this.cells[empire.cells[i]].site.tags);
-      colors = colors.concat(this.cells[empire.cells[i]].site.colors);
-    }
-  }
-  tags.unique();
-  colors.unique();
-  return {tags:tags,colors:colors};
-}
-hexPlaneMap.prototype.empireAggro = function (eid) {
-  var empire = this.empires[eid], aggro=-8, pop={};
-  for (var i = 0; i < empire.cells.length; i++) {
-    if(typeof this._population[empire.cells[i]] !== "undefined"){
-      pop = this._population[empire.cells[i]];
-      if(pop.aggro>aggro) {
-        aggro = pop.aggro;
-      }
-    }
-  }
-  return aggro;
-}
 hexPlaneMap.prototype.assets = function () {
-  var map=this, max = [1,4,7,10,13], n=0, pop={}, empire={}, aggro = -8, tags=[];
+  var map=this, max = [0,2,4,6,8], n=0, pop={}, mpop={}, empire={}, aggro = -8, tags=[];
   //cycle through the cells
   for (var x in this.cells){
     //if there is a pop they have assets
     if(typeof this.cells[x].pop !== "undefined"){
-      pop = this.cells[x].pop;
-      //pull tags for the entire empire
-      if(typeof this.cells[x].empire !== "undefined") {
-        tags = this.empireTags(this.cells[x].empire);
+      pop=this.cells[x].pop;
+      //pull aggro for the empire or pop
+      if(objExists(typeof this.cells[x].empire)) {
         aggro = this.empireAggro(this.cells[x].empire);
       }
       else {
-        tags = {tags:this._population[x].tags,colors:this._population[x].colors};
         aggro = this._population[x].aggro;
       }
       //max asset number is n
       n = max[pop.size-1];
       //include asset array
       pop.assets = [];
+      if(typeof map._population[x] !== "undefined"){
+        if(map._population[x].tags.length>0) {
+          pop.assets = pop.assets.concat(map._population[x].tags);
+          n-= pop.assets.length;
+        }
+      }
       //loop while n is not 0
       while(n>0){
         //lower max asset number
         n--;
-        //push the asset
-        pop.assets.push(this.makeAssets(tags,pop.assets,aggro));
+        //make the asset
+        this.makeAssets(this.cells[x],aggro);
       }
     }
   }
@@ -716,147 +535,22 @@ hexPlaneMap.prototype.troubles = function () {
     }
   }
 }
-hexPlaneMap.prototype.empires = function () {
-  var map = this, empires={}, cid = "", pop={};
-  var hcolor=HTMLCOLOR.slice(0);
-
-  var major = [];
-  for (var x in map._population) {
-    pop=map._population[x];
-    if(pop.size >4) {
-      major.push(x);
-    }
-  }
-
-  function initialize() {
-    var ap=0, power=0, color="";
-    for (var i = 0; i < major.length; i++) {
-      cid=major[i];
-      pop=map._population[cid];
-      //assign power
-      power=pop.size-4
-      //assign a color
-      color = hcolor.random(map.RNG);
-      //load basic empire data
-      empires[cid]={color:color,power:power,cells:[cid]};
-      map.cells[cid].pop = {size:4};
-      map.cells[cid].empire = cid;
-    }
-  }
-
-  initialize();
-
-  //absorb the neighboors
-  function absorb (cid,x) {
-    var N = map.neighboors(cid).n, cell={}, pop={}, absorbed=false, i=0;
-    for (var i = 0; i < N.length; i++) {
-      cell = N[i].ncell;
-      //if there is a pop and it isn't in an empire
-      if (typeof cell.pop !== "undefined" && typeof cell.empire === "undefined")  {
-        pop = map._population[N[i].id];
-        //add empire to cell
-        cell.empire = x;
-        //it did absorb a cell
-        absorbed = true;
-        //add cell to empire
-        empires[x].cells.push(N[i].id);
-        //add cell's power if greater than 3
-        if(pop.size>3) {
-          empires[x].power=pop.size-3;
-          cell.pop = {size:3};
-        }
-      }
-
-      if (typeof cell.site !== "undefined" || typeof cell.ruin !== "undefined")  {
-        if(typeof cell.empire === "undefined") {
-          //add empire to cell
-          cell.empire = x;
-          //it did absorb a cell
-          absorbed = true;
-          //add cell to empire
-          empires[x].cells.push(N[i].id);
-          cell.pop = {size:1};
-          //add cell's power
-          if(typeof cell.site !== "undefined") {
-            empires[x].power=cell.site.size-1;
-          }
-        }
-      }
-    }
-    return absorbed;
-  }
-
-  var nC={}, ecid= "",ar=[],count=0;
-  for(var x in empires) {
-    count=0;
-    //when they run out of power the empire has expanded fully
-    while (empires[x].power>0) {
-      count++;
-      //no endless loops
-      if(count>100){
-        break;
-      }
-      //pick a random cell in the empire
-      ecid = empires[x].cells.random(map.RNG);
-      //absorb neighboors
-      if (!absorb(ecid,x)) {
-        //80% of absorbing new cell
-        if(map.RNG.random()<0.8) {
-          //get the cell's neighboors
-          nC=map.neighboors(ecid).n.random(map.RNG);
-          //add empire data to an empty cell
-          if(typeof nC.ncell.empire === "undefined") {
-            nC.ncell.pop = {size:1}
-            nC.ncell.empire = x;
-            empires[x].cells.push[nC.id];
-            empires[x].power--;
-          }
-        }
-        else {
-          //add power to current cell pop
-          cell = map.cells[ecid];
-          if(cell.pop.size <2){
-            cell.pop.size++;
-            empires[x].power--;
-          }
-          else if (cell.pop.size==3) {
-            if(map.RNG.random()<0.25){
-              cell.pop.size++;
-              empires[x].power--;
-            }
-          }
-          else if (cell.pop==4) {
-            if(map.RNG.random()<0.05){
-              cell.pop.size++;
-              empires[x].power--;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  map.empires = empires;
-}
 hexPlaneMap.prototype.center = function () {
   return [this._width/2,this._height/2];
 }
 hexPlaneMap.prototype.rawcells = function () {
-  var cell = [], i=0, terrains=[0,0,0,0,0];
+  var cell = [], i=0;
   for (var c in this.cells) {
     cell.push([this.cells[c].x,this.cells[c].y]);
     cell[i].data = this.cells[c]
     i++;
-    terrains[this.cells[c].terrain]++;
   }
-  console.log(terrains);
-
   return cell;
 }
 hexPlaneMap.prototype.popData = function () {
-  var data = {pop:[],sites:[],ruins:[],empires:[]}, i=0, j=0, k=0, l=0;
+  var data = {pop:[],sites:[],ruins:[]}, i=0, j=0, k=0, l=0;
   for (var c in this.cells) {
-  	if(typeof this.cells[c].pop !== "undefined" && typeof this.cells[c].empire === "undefined"){
+  	if(typeof this.cells[c].pop !== "undefined"){
   		data.pop.push([this.cells[c].x,this.cells[c].y]);
     	data.pop[i].data = this.cells[c].pop;
     	i++;
@@ -873,15 +567,16 @@ hexPlaneMap.prototype.popData = function () {
     	data.ruins[j].data = this.cells[c].ruin;
     	j++;
   	}
-
-    if(typeof this.cells[c].empire !== "undefined"){
-  		data.empires.push([this.cells[c].x,this.cells[c].y]);
-    	data.empires[k].data = this.cells[c].empire;
-    	k++;
-  	}
   }
 
   return data;
+}
+hexPlaneMap.prototype.cellsByTerrain = function () {
+  var cA = {"0":[],"1":[],"2":[],"3":[],"4":[]};
+  for (var x in this.cells){
+    cA[this.cells.terrain].push(x);
+  }
+  return cA;
 }
 //axial neighboors
 hexPlaneMap.prototype.neighboors = function (cell) {
@@ -1156,6 +851,36 @@ hexPlaneMap.prototype.addZone = function () {
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//stats
+hexPlaneMap.prototype.statTerrain = function () {
+  var stat=[0,0,0,0,0];
+  for(var x in this.cells){
+    stat[this.cells[x].terrain]++;
+  }
+  return stat;
+}
+hexPlaneMap.prototype.statPop = function () {
+  var stat={};
+  for(var x in this._population){
+    if(objExists(stat[this._population[x].race])){
+      stat[this._population[x].race]++;
+    }
+    else {
+      stat[this._population[x].race]=1;
+    }
+  }
+  return stat;
+}
+hexPlaneMap.prototype.statEmpire = function () {
+  var stat={};
+  for(var x in this._empires){
+    stat[this.cells[x].terrain]++;
+  }
+  return stat;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Display
 
 hexPlaneMap.prototype.key = function () {
@@ -1176,6 +901,17 @@ hexPlaneMap.prototype.key = function () {
 
     d3.select("#hexKey").append("div")
       .attr("id", "cellInfo");
+
+
+    var next = "<div class=buttons><button type=button id=btnActMonth>Progress One Month</button></div>"
+    d3.select("#hexKey").append("div")
+        .attr("id", "actions")
+        .html(next);
+
+  var map =this;
+  d3.select("#btnActMonth").on("click", function(){
+    map.act();
+  });
 
 }
 
@@ -1207,6 +943,15 @@ hexPlaneMap.prototype.display = function () {
     .order()
     .on("click", function(){
       var hex = d3.select(this).datum();
+      var cid = hex[0]+","+hex[1];
+
+      if(typeof hex.data.empire !== "undefined"){
+        hex._empire=map.empires[hex.data.empire];
+      }
+      if(typeof map._population[cid] !== "undefined"){
+        hex._pop=map._population[cid];
+      }
+
       console.log(hex);
       map.cellDisplay(hex[0]+","+hex[1]);
     });
@@ -1232,6 +977,15 @@ hexPlaneMap.prototype.display = function () {
     .order()
     .on("click", function(){
       var hex = d3.select(this).datum();
+      var cid = hex[0]+","+hex[1];
+
+      if(typeof hex.data.empire !== "undefined"){
+        hex._empire=map.empires[hex.data.empire];
+      }
+      if(typeof map._population[cid] !== "undefined"){
+        hex._pop=map._population[cid];
+      }
+
       console.log(hex);
       map.cellDisplay(hex[0]+","+hex[1]);
     });
@@ -1239,8 +993,7 @@ hexPlaneMap.prototype.display = function () {
     var hinfo = "<h1>"+this.name+"</h1>";
     hinfo+="<strong>Seed: </strong>"+this.uid;
     hinfo+="<h3>Views</h3><span class=selView id=gClimate>Climate</span>";
-    hinfo+="</br><span class='selView selected' id=gPop>Population</span>";
-    hinfo+="</br><span class='selView selected' id=gEmpires>Empires</span>";
+    hinfo+="</br><span class='selView selected' id=gEmpires>Population</span>";
     hinfo+="</br><span class='selView selected' id=gSites>Sites</span>";
     hinfo+="</br><span class='selView selected' id=gRuins>Ruins</span>";
 
@@ -1310,14 +1063,9 @@ hexPlaneMap.prototype.cellDisplay = function (cell) {
 
   var sizes = ["Villages","Towns","Cities","Large City","Metropolis"];
 
-  if(typeof data.pop !== "undefined" && typeof data.empire === "undefined"){
-    var pop = map._population[data.x+","+data.y];
-    html+="</br>"+pop.race+" "+sizes[data.pop.size-1];
-  }
-
-  if(typeof data.empire !== "undefined"){
-    var empire = data.empire;
-    html+="</br>Empire "+sizes[data.pop.size-1];
+  if(typeof data.pop !== "undefined"){
+    var empire = map._empires[data.pop.eid]
+    html+="</br>"+empire.name+" "+sizes[data.pop.size-1];
   }
 
   if(typeof data.site !== "undefined"){
@@ -1339,10 +1087,9 @@ hexPlaneMap.prototype.cellDisplay = function (cell) {
 hexPlaneMap.prototype.popDisplay = function () {
 	var svg = d3.select(".map"), map=this, popdata = map.popData();
 
-  this.makePoints('gPop','pop',popdata.pop,function () { return 3; },function () { return 'red'; });
   this.makePoints('gSites','site',popdata.sites,function () { return 3; },function () { return 'Gold'; });
   this.makePoints('gRuins','ruin',popdata.ruins,function () { return 3; },function () { return 'gray'; });
-  this.makePoints('gEmpires','empire',popdata.empires,function () { return 3; },function (empire) { return map.empires[empire.data].color; });
+  this.makePoints('gEmpires','empire',popdata.pop,function () { return 3; },function (empire) { return map._empires[empire.data.eid].color; });
 
   var sizes = ["Villages","Towns","Cities","Large City","Metropolis"];
 
@@ -1351,14 +1098,8 @@ hexPlaneMap.prototype.popDisplay = function () {
 			var data = cell[0].__data__.data;
 			var html="<strong>"+TERRAIN[data.terrain].name+" ("+CLIMATE[data.climate].name+")</strong>";
 
-			if(typeof data.pop !== "undefined" && typeof data.empire === "undefined"){
-				var pop = map._population[data.x+","+data.y];
-        html+="</br>"+pop.race+" "+sizes[data.pop.size-1];
-			}
-
-      if(typeof data.empire !== "undefined"){
-				var empire = data.empire;
-        html+="</br>Empire "+sizes[data.pop.size-1];
+			if(typeof data.pop !== "undefined"){
+        html+="</br>"+sizes[data.pop.size-1];
 			}
 
       if(typeof data.site !== "undefined"){
@@ -1435,8 +1176,3 @@ var HCell = function (x,y,terrain,zone) {
     zone.cells.push(x+","+y);
   }
 }
-
-var map = new hexPlaneMap();
-map.random();
-console.log(map);
-map.display();
