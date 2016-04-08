@@ -16,7 +16,7 @@ hexPlaneMap.prototype.act = function () {
   console.log(summary);
 }
 hexPlaneMap.prototype.popAct = function (cell) {
-  var map = this, tRNG = this.fullRNG,
+  var map = this,
     empire = this.empires[cell.empire],
     aggro = this.empireAggro(cell.empire),
     doom = this.empireDoom(cell.empire),
@@ -36,15 +36,15 @@ hexPlaneMap.prototype.popAct = function (cell) {
   }
 
   function increaseTrouble() {
-    var tid = tRNG.rndInt(0,cell.pop.troubles.length-1);
+    var tid = xorRNG.rndInt(0,cell.pop.troubles.length-1);
     cell.pop.troubles[tid][1]++;
     summary.push(empire.name+" Increase Trouble");
   }
 
   function rndTrouble() {
     var tid=-1;
-    if(tRNG.random()<0.5){
-      tid = tRNG.rndInt(0,TROUBLE.length-1);
+    if(xorRNG.random()<0.5){
+      tid = xorRNG.rndInt(0,TROUBLE.length-1);
       //push the trouble with strength
       cell.pop.troubles.push([tid,1]);
       summary.push(empire.name+" Add Trouble");
@@ -62,7 +62,7 @@ hexPlaneMap.prototype.popAct = function (cell) {
   }
 
   function troubleCheck (){
-    var nT = nTrouble(), str=strength[cell.pop.size-1], R = tRNG.rndInt(1,str);
+    var nT = nTrouble(), str=strength[cell.pop.size-1], R = xorRNG.rndInt(1,str);
     if(R > nT){
       return true;
     }
