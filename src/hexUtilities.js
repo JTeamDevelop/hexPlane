@@ -1,3 +1,5 @@
+CPX = {};
+
 //RNG function - based on seedrandom.js for repeatability and it uses xor4096 for extensive period
 RNG = function(seed){
 	this.seedrnd = typeof seed === "undefined" ? new xor4096(Math.random()) : new xor4096(seed);
@@ -67,13 +69,14 @@ RNG.prototype.RNDBias = function (min, max, bias, influence) {
 xorRNG = new RNG();
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //makes a unique id for various objects that is n characters long
-makeUID = function (n) {
+makeUID = function (n,RNG) {
 	n = typeof n === "undefined" ? 24 : n;
+	RNG = typeof RNG === "undefined" ? xorRNG : RNG;
 	var text = "";
-	var possible = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
+	var possible = "ABCDEFGHIJKLMNPOQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 	for( var i=0; i < n; i++ ){
-		text += possible.charAt(Math.floor(xorRNG.random() * possible.length));
+		text += possible.charAt(Math.floor(RNG.random() * possible.length));
 	}
 
    	return text;
@@ -100,6 +103,15 @@ objExists = function (obj) {
     return true;
   }
 }
+objArrayContains = function (objarray,key,data) {
+	for (var x in objarray) {
+		if(objExists(objarray[x].key)) {
+			if(objarray[x].key == data) {
+				return x;
+			}
+		}
+	}
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //String helpers
 String.prototype.capFirst = function() {
@@ -109,7 +121,7 @@ String.prototype.capFirst = function() {
 //Array helpers
 //Find max and return it with index
 Array.prototype.max = function () {
-  var max = {i:-1,val:this[0]};
+  var max = {i:0,val:this[0]};
   for(var i = 0; i < this.length; ++i){
     if(this[i]>max.val){
       max.val = this[i];

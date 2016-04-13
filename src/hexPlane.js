@@ -201,9 +201,10 @@ var hexPlaneMap = function (seed) {
   this._ruins={};
   this._people={};
   this._population={};
+  this._doom = {};
+  this._artifacts = {};
   this._empires={};
   this._zones = [];
-  this._doomTracker=[];
   this._time=[0,0,0];
 }
 hexPlaneMap.prototype.noPopCell = function () {
@@ -222,7 +223,39 @@ hexPlaneMap.prototype.cellArray = function () {
   }
   return cA;
 }
-hexPlaneMap.prototype.random = function () {
+//Find cells within distance X to the provided cell
+hexPlaneMap.prototype.cellWithinX = function (cid,x) {
+  var cell= {}, ncid = "", cA=[[cid]];
+  cA.all=[cid];
+  //loop through up to distance x
+  for (var i = 1; i < x; i++) {
+    //push a new array to cA representing cells at that distance
+    cA.push([]);
+    //loop  through cells at the previous distance
+    for (var j = 0; j < cA[i-1].length; j++) {
+      //load cell
+      cell = this.cells[cA[i-1][j]];
+      //loop through cell neighboors
+      for (var k = 0; k < this.std_n.length; k++) {
+        ncid = (Number(cell.x)+this.std_n[k][0])+","+(Number(cell.y)+this.std_n[k][1]);
+        //if cell not added before add it now
+        if(!cA.all.contains(ncid)){
+          cA[i].push(ncid);
+          cA.all.push(ncid);
+        }
+      }
+    }
+
+  }
+  return cA;
+}
+hexPlaneMap.prototype.random = function (opts) {
+  opts = typeof opts === "undefined" ? {} : opts;
+  opts.display = typeof opts.display === "undefined" ? false : opts.display;
+  if(opts.display){
+    map.displaySetup();
+  }
+
   this.name = nameGen(this.RNG).capFirst();
   var n = Math.floor(this.RNG.RNDBias(this._min, this._max, this._bias, this._influence));
   this._rndC = n;
@@ -239,29 +272,22 @@ hexPlaneMap.prototype.random = function () {
     for(var i =0; i<n ; i++) {
       this.addCell();
     }
-    var n = noty({layout: 'center', type: 'success', timeout: 500, text: 'Generating terrain.'});
+
     this.makeTerrain();
-    this.makeClimate();
+    this.makeClimate(opts.display);
   }
 
-}
-//doom function, gives the current doom level d, and the nature of the doom - what is its goal
-hexPlaneMap.prototype.makeDoom = function (cell) {
-  this._doomTracker.push(cell);
-  this.cells[cell].tags.push("Doom");
-
-  var d = [0,1,1,1,2,2,3,4];
-  var t = ["Conquer","Destroy","Harvest","Subvert"];
-  return [d.random(map.RNG),t.random(map.RNG)];
 }
 hexPlaneMap.prototype.makeArtifact = function (card) {
   card = typeof card === "undefined" ? newCard(this.RNG) : card;
-  var power = {l:1.5,c:1,u:1.5,r:3,m:6};
+  var uid = makeUID(6,this.RNG);
   var artifact = {
+    uid: uid,
     rarity:card.rarity,
-    power:Math.round(card.cmc*power[card.rarity]),
+    power:card.power,
     tags:this.colorTags(card)
   }
+  this._artifacts[uid]=artifact;
   return artifact;
 }
 hexPlaneMap.prototype.colorTags = function (card) {
@@ -403,13 +429,13 @@ hexPlaneMap.prototype.newSite = function (card,cell) {
 
   //artifact chance
   if(this.RNG.random()<0.02) {
-    site.artifact=[this.makeArtifact()];
+    site.artifact=[this.makeArtifact().uid];
     this.cells[cell].tags.push("Artifact");
   }
 
   //if there is black there is doom
   if(this.RNG.random()<0.15) {
-    site.doom=this.makeDoom(cell);
+    this.makeDoom(cell,"site");
   }
 
   this.cells[cell].site = site;
@@ -468,12 +494,12 @@ hexPlaneMap.prototype.newRuin = function (card,cell) {
   };
 
   //all ruins have an artifact
-  ruin.artifact=[this.makeArtifact(card)];
+  ruin.artifact=[this.makeArtifact(card).uid];
   this.cells[cell].tags.push("Artifact");
 
   //if there is black there is doom
   if(this.RNG.random()<0.15) {
-    ruin.doom=this.makeDoom(cell);
+    this.makeDoom(cell,"ruin");
   }
 
   this.cells[cell].ruin = ruin;
@@ -675,7 +701,8 @@ hexPlaneMap.prototype.addCell = function () {
   }
 
   if(cA.length==0){
-    this.cells["0,0"] = new HCell(0,0,-1);
+    newCell = "0,0";
+    this.cells[newCell] = new HCell(0,0,-1);
   }
   else {
     while (newCell.length==0) {
@@ -689,7 +716,7 @@ hexPlaneMap.prototype.addCell = function () {
     }
   }
 }
-hexPlaneMap.prototype.makeClimate = function () {
+hexPlaneMap.prototype.makeClimate = function (display) {
   var map = this, cA=[], done=[], cell = "";
 
   //put all the cells in an array for random selection
@@ -712,6 +739,9 @@ hexPlaneMap.prototype.makeClimate = function () {
       map.cells[cell].climate=climates.random(map.RNG);
       //remove the cell from the array so it can't be selected again
       cA.remove(cell);
+      if(display) {
+        map.displayHex(cell);
+      }
     }
   }
 
@@ -726,6 +756,10 @@ hexPlaneMap.prototype.makeClimate = function () {
       N.ncell.climate = map.cells[cell].climate;
       cA.remove(N.id);
       done.push(N.id);
+
+      if(display) {
+        map.displayHex(N.id);
+      }
     }
   }
 
@@ -885,247 +919,6 @@ hexPlaneMap.prototype.statEmpire = function () {
   return stat;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Display
-
-hexPlaneMap.prototype.key = function () {
-
-    var title = "<h2>Key</h2>", tkey="<div id=keyTerrain>", ckey="<div id=keyClimate>";
-    TERRAIN.forEach(function(T){
-    	tkey+="<div class=square style='background:"+T.color+"'></div>"+T.name+"</br>";
-    })
-	CLIMATE.forEach(function(C){
-    	ckey+="<div class=square style='background:"+C.color+"'></div>"+C.name+"</br>";
-    })
-    tkey+="</div>";
-    ckey+="</div>";
-
-    d3.select("#hexKey").append("div")
-      .attr("id", "TCKey")
-      .html(title+tkey+ckey);
-
-    d3.select("#hexKey").append("div")
-      .attr("id", "cellInfo");
-
-
-    var next = "<div class=buttons><button type=button id=btnActMonth>Progress One Month</button></div>"
-    d3.select("#hexKey").append("div")
-        .attr("id", "actions")
-        .html(next);
-
-  var map =this;
-  d3.select("#btnActMonth").on("click", function(){
-    map.act();
-  });
-
-}
-
-hexPlaneMap.prototype.display = function () {
-  var map = this;
-  var svg = d3.select("#hexPlane").append("svg")
-  	.classed({'map': true})
-    .attr("width", map._width)
-    .attr("height", map._height);
-
-  var hex = svg.append("g").classed({'gHex': true})
-    .selectAll("path")
-    .data(map.rawcells(), function(cell){
-      return drawCell(map,cell);
-    })
-    .enter().append("path")
-    .classed({'hex': true})
-    .style({fill: function (cell) {
-        if(cell.data.terrain>-1) {
-          return TERRAIN[cell.data.terrain].color;
-        }
-      }})
-    .attr("d", function(cell){
-      return drawCell(map,cell);
-    })
-    .attr("title", function(cell){
-      return "Hex";
-    })
-    .order()
-    .on("click", function(){
-      var hex = d3.select(this).datum();
-      var cid = hex[0]+","+hex[1];
-
-      if(typeof hex.data.empire !== "undefined"){
-        hex._empire=map.empires[hex.data.empire];
-      }
-      if(typeof map._people[cid] !== "undefined"){
-        hex._people=map._people[cid];
-      }
-
-      console.log(hex);
-      map.cellDisplay(hex[0]+","+hex[1]);
-    });
-
-	var hexClimate = svg.append("g").classed({'gClimate': true})
-    .selectAll("path")
-    .data(map.rawcells(), function(cell){
-      return drawCell(map,cell);
-    })
-    .enter().append("path")
-    .classed({'hex': true})
-    .style({fill: function (cell) {
-        if(cell.data.climate>-1) {
-          return CLIMATE[cell.data.climate].color;
-        }
-      }})
-    .attr("d", function(cell){
-      return drawCell(map,cell);
-    })
-    .attr("title", function(cell){
-      return "Hex";
-    })
-    .order()
-    .on("click", function(){
-      var hex = d3.select(this).datum();
-      var cid = hex[0]+","+hex[1];
-
-      if(typeof hex.data.empire !== "undefined"){
-        hex._empire=map.empires[hex.data.empire];
-      }
-      if(typeof map._people[cid] !== "undefined"){
-        hex._pop=map._people[cid];
-      }
-
-      console.log(hex);
-      map.cellDisplay(hex[0]+","+hex[1]);
-    });
-
-    var hinfo = "<h1>"+this.name+"</h1>";
-    hinfo+="<strong>Seed: </strong>"+this.uid;
-    hinfo+="<h3>Views</h3><span class=selView id=gClimate>Climate</span>";
-    hinfo+="</br><span class='selView selected' id=gEmpires>Population</span>";
-    hinfo+="</br><span class='selView selected' id=gSites>Sites</span>";
-    hinfo+="</br><span class='selView selected' id=gRuins>Ruins</span>";
-
-    d3.select("#hexKey").append("div")
-      .attr("id", "pInfo")
-      .html(hinfo);
-
-	//add functionality to change views
-	d3.selectAll(".selView").on("click",function(){
-		var sel = d3.select(this);
-		var state = sel.classed("selected"), opacity=1;
-    if(state) {
-      opacity = 0;
-    }
-		var id = sel.attr("id");
-		//togles the climate views on and off
-		if(id == "gClimate"){
-			if(state) {
-				d3.select(".gHex").style({opacity:1});
-				d3.select("#keyTerrain").style({display:"inline"});
-				d3.select("#keyClimate").style({display:"none"});
-			}
-			else {
-				d3.select(".gHex").style({opacity:0});
-				d3.select("#keyTerrain").style({display:"none"});
-				d3.select("#keyClimate").style({display:"inline"});
-			}
-		}
-
-    //toggle dots on and off
-    d3.select("."+id).style({opacity:opacity});
-
-		//toggle selected class
-		sel.classed("selected", !sel.classed("selected"));
-	});
-
-	map.key();
-}
-hexPlaneMap.prototype.makePoints = function (groupclass,cellclass,data,size,color) {
-  var svg = d3.select(".map"), map=this;
-
-  var pop = svg.append("g").attr("class",groupclass)
-    .selectAll("circle")
-    .data(data, function(cdata){
-      return cellCenter(map,cdata);
-    })
-    .enter().append("circle")
-    .attr("class",cellclass)
-    .attr("cx", function(cdata){
-      return cellCenter(map,cdata)[0];
-    })
-    .attr("cy", function(cdata){
-      return cellCenter(map,cdata)[1];
-    })
-    .attr("r", function(cdata){ return size(cdata); })
-    .style({fill: function(cdata){ return color(cdata); }})
-    .order()
-    .on("click", function(){
-        var cdata = d3.select(this).datum();
-        console.log(cdata);
-    });
-}
-hexPlaneMap.prototype.cellDisplay = function (cell) {
-  var data = this.cells[cell];
-  var html="<h3>Cell "+cell+"</h3>";
-  html+="<strong>"+TERRAIN[data.terrain].name+" ("+CLIMATE[data.climate].name+")</strong>";
-
-  var sizes = ["Villages","Towns","Cities","Large City","Metropolis"];
-
-  if(typeof data.pop !== "undefined"){
-    var empire = map._empires[data.pop.eid]
-    html+="</br>"+empire.name+" "+sizes[data.pop.size-1];
-  }
-
-  if(typeof data.site !== "undefined"){
-    var site = data.site;
-    html+="</br>"+site.tags[0]
-    html+="</br>"+site.tags[1]
-  }
-
-  if(typeof data.ruin !== "undefined"){
-    var ruin = data.ruin;
-    html+="</br><strong>"+ruin.race+" Ruin</strong>";
-    html+="</br>"+ruin.tags[0]+" ("+ruin.size+")";
-  }
-
-  html+="</br>"+data.tags.join(" ,");
-
-  d3.select("#cellInfo").html(html);
-}
-hexPlaneMap.prototype.popDisplay = function () {
-	var svg = d3.select(".map"), map=this, popdata = map.popData();
-
-  this.makePoints('gSites','site',popdata.sites,function () { return 3; },function () { return 'Gold'; });
-  this.makePoints('gRuins','ruin',popdata.ruins,function () { return 3; },function () { return 'gray'; });
-  this.makePoints('gEmpires','empire',popdata.pop,function () { return 3; },function (empire) { return map._empires[empire.data.eid].color; });
-
-  var sizes = ["Villages","Towns","Cities","Large City","Metropolis"];
-
-	$('path.hex').tooltipsy({
-		content: function(cell) {
-			var data = cell[0].__data__.data;
-			var html="<strong>"+TERRAIN[data.terrain].name+" ("+CLIMATE[data.climate].name+")</strong>";
-
-			if(typeof data.pop !== "undefined"){
-        html+="</br>"+sizes[data.pop.size-1];
-			}
-
-      if(typeof data.site !== "undefined"){
-        var site = data.site;
-        html+="</br>"+site.tags[0]
-        html+="</br>"+site.tags[1]
-      }
-
-      if(typeof data.ruin !== "undefined"){
-        var ruin = data.ruin;
-        html+="</br><strong>"+ruin.race+" Ruin</strong>";
-        html+="</br>"+ruin.tags[0]+" ("+ruin.size+")";
-      }
-
-      html+="</br>"+data.tags.join(" ,");
-
-			return html;
-		}
-	});
-
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

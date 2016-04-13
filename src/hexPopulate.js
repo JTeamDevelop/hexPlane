@@ -51,9 +51,6 @@ hexPlaneMap.prototype.populate = function () {
   //Load population and sites
 	var n = Math.round(this._rndC/10);
   while(cPop.length <n)  {
-    if(cPop.length==n/2){
-      var n = noty({layout: 'center', type: 'success', timeout: 500, text: 'Almost done.'});
-    }
     //random cell
     cell = cA.random(this.RNG);
     if(cPop.contains(cell)){
@@ -156,7 +153,7 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
 
   //artifact chance
   if(this.RNG.random()<0.02) {
-    pop.artifact=[this.makeArtifact()];
+    pop.artifact=[this.makeArtifact().uid];
     cell.tags.push("Artifact");
   }
 
@@ -166,7 +163,7 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
       pop.aggro++;
     }
     pop.aggro=Math.abs(pop.aggro);
-    pop.doom=this.makeDoom(cid);
+    this.makeDoom(cid,pop.name);
   }
 
   var empire = {}, eid = "", ap = [3,3,3,3,3], ns=-1, eid="";
