@@ -13,9 +13,32 @@
 </head>
 
 <body>
-  <div id="hexPlane" >
-	   <div id="hexKey" ></div>
+  <div id="title"></div>
+  <div id="menu">
+    <div class="menu"><a href="./index.html">Home</a></div>
+    <div class="menu dropdown">Views
+      <div class="dropdown-content">
+        <ul>
+          <li class='selView' id="gStats">Stats</li>
+          <li class='selView' id="gKey">Key</li>
+          <li class='selView' id="gClimate">Climate</li>
+          <li class='selView selected' id="gEmpires">Population</li>
+          <li class='selView selected' id="gSites">Sites</li>
+          <li class='selView selected' id="gRuins">Ruins</li>
+        </ul>
+      </div>
+    </div>
+    </div>
   </div>
+  <div id="left">
+    <div id="heroCurrent"></div>
+    <div id="dInfo"></div>
+  </div>
+  <div id="right">
+    <div id="hexStats"></div>
+    <div id="hexKey"></div>
+  </div>
+  <div id="hexPlane" ></div>
   <div id="overDisplay" >
     <div id="notify"><div class="content" ></div></div>
   </div>
@@ -23,6 +46,7 @@
 
   <script type="text/javascript" src="src/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="src/jquery.noty.packaged.min.js"></script>
+  <script type="text/javascript" src="src/svg-pan-zoom.min.js"></script>
   <script type="text/javascript" src="src/tooltipsy.min.js"></script>
   <script type="text/javascript" src="src/seedrandom.min.js"></script>
   <script type="text/javascript" src="src/xor4096.min.js"></script>
