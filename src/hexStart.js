@@ -1,11 +1,15 @@
 var n = noty({layout: 'center', type: 'success', timeout: 500, text: 'Welcome to hexPlane!'});
+var n = noty({layout: 'center', type: 'success', timeout: 500, text: 'Generating terrain.'});
 var map = new hexPlaneMap();
-map.random();
-map.display();
-
 setTimeout(function(){
+  map.random({display:true});
   var n = noty({layout: 'center', type: 'success', timeout: 500, text: 'Populating.'});
-  map.populate();
 }, 1000);
 
-console.log(map);
+setTimeout(function(){
+  map.populate();
+  console.log(map);
+
+  map.heroRandomGen();
+  var panZoomHex = svgPanZoom('#hexSVG');
+}, 5000);
