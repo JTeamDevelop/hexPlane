@@ -84,6 +84,7 @@ CPX.makeHero = function (opts) {
   var stats = [2,1,1,0,0,-1];
   hero.name = hRNG.rndName();
   hero.stats = hRNG.shuffleAr(stats);
+	hero.mph = 5;
   hero.gifts = 1;
   hero.powers = 4;
 
@@ -142,7 +143,31 @@ CPX.heroDisplay = function (hero) {
   return "<div class=hero data-uid="+hero.uid+" data-lv="+hero.levels.length+">"+html+"</div>";
 }
 
+hexPlaneMap.prototype.heroRandomPlace = function (hid) {
+	var cA = this.cellsByTerrain().land;
+	this._heroes[hid].location = cA.random(this.RNG);
+	this.displayHeroToMap(hid);
+
+	this.heroMakeCurrent(hid);
+}
+hexPlaneMap.prototype.heroMakeCurrent = function (hid) {
+	this._currentHero=this._heroes[hid];
+	this.displayCurrentHeroInfo(hid);
+}
+hexPlaneMap.prototype.heroMove = function (cid) {
+	this._currentHero.location = cid;
+	this.displayHeroMove(this._currentHero.uid);
+}
+hexPlaneMap.prototype.heroCellMoveCheck = function (cid) {
+	var cA= this.cellWithinX(this._currentHero.location,1)[1];
+	if(cA.contains(cid)){
+		this.heroMove(cid);
+	}
+	return false;
+}
 hexPlaneMap.prototype.heroRandomGen = function () {
+	var map = this;
+
   $("#notify").removeClass("slim");
   $("#notify").addClass("wide");
 
@@ -152,12 +177,32 @@ hexPlaneMap.prototype.heroRandomGen = function () {
     $("#notify .content").append(CPX.heroDisplay(tmpHeros[i]));
   }
 
+	var genMore = "<div class='buttons center'><button type=button id=btnGenMore class=center>Generate Four More Heroes</button></div>"
+	$("#notify .content").append(genMore);
+
   $("#notify").slideDown();
+
+	d3.select("#btnGenMore").on("click", function(){
+    map.heroGenMore();
+  });
 
   d3.selectAll("#notify .hero").on("click", function(){
     var seed = $(this).attr("data-uid");
-    $("#notify").slideUp();
+
+		$("#notify").slideUp();
+		$("#notify .content").empty();
+
+		map._heroes[seed] = CPX.makeHero({seed:seed});
     console.log(CPX.makeHero({seed:seed}));
+		map.heroRandomPlace(seed);
+
+		var n = noty({layout: 'topCenter', type: 'information', text: 'Zoom with the mousewheel. </br>Drag by holding the left mouse button.'});
   });
 
+	var herohtml = "<strong>Select a Hero</strong></br>Click on the Hero you wish to be to start."
+	var n = noty({layout: 'center', type: 'alert', timeout: 1500, text: herohtml});
+}
+hexPlaneMap.prototype.heroGenMore = function () {
+	$("#notify .content").empty();
+	this.heroRandomGen();
 }

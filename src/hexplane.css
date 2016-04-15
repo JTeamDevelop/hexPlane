@@ -1,6 +1,46 @@
 h1, h2, h3 {
   margin: 0;
 }
+.dropdown-content {
+  display: none;
+  position: absolute;
+}
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+#menu {
+  position:absolute;
+  top:0;
+  right: 0;
+  z-index:5;
+  background-color: lightGray;
+}
+#menu .menu{
+  display: inline-block;
+  padding: 10px;
+}
+#menu .menu:hover{
+  background-color: gray;
+}
+#menu a {
+  text-decoration:none;
+  color: black;
+}
+#menu ul {
+  list-style-type:none;
+  margin: 0;
+}
+#menu .dropdown-content {
+  right:0;
+}
+#menu .dropdown-content li {
+  text-align: center;
+  background-color: lightGray;
+  padding: 10px;
+}
+#menu .dropdown-content li:hover {
+  background-color: gray;
+}
 
 #hexPlane {
   position:fixed;
@@ -8,11 +48,58 @@ h1, h2, h3 {
   bottom:20px;
   left:1%;
   right:1%;
+  z-index:-1;
 }
+
+#right {
+  position: fixed;
+  right: 0;
+  top: 45px;
+  max-width:250px;
+}
+#left {
+  position: fixed;
+  left: 0;
+  top: 45px;
+  max-width:250px;
+}
+
+#heroCurrent {
+  display: none;
+}
+#dInfo {
+  display: none;
+  margin: 3px;
+  padding: 0.5em;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+#hexStats {
+  border: 1px solid black;
+  display: none;
+  padding: 0.5em;
+}
+#seedN {
+  background-color: lightblue;
+  border-radius: 7px;
+  font-weight: bold;
+  font-size:0.9em;
+  padding: 5px;
+}
+#seed .title {
+  font-size:0.8em;
+}
+.title {
+  font-weight: bold;
+}
+
 #hexKey {
-  position:absolute;
-  top: -5px;
-  left: 5px;
+  display: none;
+  margin: auto;
+  text-align: center;
+  width:150px;
+  margin-top: 1em;
 }
 
 #notify{
@@ -38,10 +125,10 @@ h1, h2, h3 {
   overflow-y: auto;
 }
 #notify.wide .content {
-  height: 600px;
+  max-height: 600px;
 }
 #notify.slim .content {
-  height: 300px;
+  max-height: 300px;
 }
 
 .hero {
@@ -68,14 +155,6 @@ h1, h2, h3 {
   opacity: 0;
 }
 
-#pInfo {
-  padding: .5em;
-  border: 1px solid black;
-}
-#pInfo h3{
-  margin: 0.4em 0;
-}
-
 #TCKey {
   padding: .5em;
   border: 1px solid black;
@@ -89,20 +168,17 @@ h1, h2, h3 {
 .selView {
   cursor: pointer;
 }
-
 .selView.selected{
   text-decoration: underline;
   color: green;
 }
 
-path {
+.center {
+  text-align: center;
 }
-
-circle {
-  fill: #000;
-  pointer-events: none;
+.header {
+  font-weight:bold;
 }
-
 .selected {
   fill: yellow;
 }

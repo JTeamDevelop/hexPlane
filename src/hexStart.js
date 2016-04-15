@@ -8,8 +8,8 @@ setTimeout(function(){
 
 setTimeout(function(){
   map.populate();
-  map.displayHex("0,0");
   console.log(map);
 
   map.heroRandomGen();
+  var panZoomHex = svgPanZoom('#hexSVG');
 }, 5000);

@@ -196,6 +196,7 @@ var hexPlaneMap = function (seed) {
   this.std_n = [[0,1],[-1,1],[-1,0],[0,-1],[1,-1],[1,0]];
 
   this._set={};
+  this._queue={};
   this.cells = {};
   this._sites={};
   this._ruins={};
@@ -206,6 +207,9 @@ var hexPlaneMap = function (seed) {
   this._empires={};
   this._zones = [];
   this._time=[0,0,0];
+
+  this._heroes = {};
+  this._currentHero = {};
 }
 hexPlaneMap.prototype.noPopCell = function () {
   var cA = [];
@@ -223,12 +227,25 @@ hexPlaneMap.prototype.cellArray = function () {
   }
   return cA;
 }
+hexPlaneMap.prototype.cellsByTerrain = function () {
+  var cA = {water:[],land:[],"0":[],"1":[],"2":[],"3":[],"4":[]};
+  for (var x in this.cells) {
+    cA[this.cells[x].terrain].push(x);
+    if(this.cells[x].terrain == 0){
+      cA.water.push(x);
+    }
+    else {
+      cA.land.push(x);
+    }
+  }
+  return cA;
+}
 //Find cells within distance X to the provided cell
 hexPlaneMap.prototype.cellWithinX = function (cid,x) {
   var cell= {}, ncid = "", cA=[[cid]];
   cA.all=[cid];
   //loop through up to distance x
-  for (var i = 1; i < x; i++) {
+  for (var i = 1; i < x+1; i++) {
     //push a new array to cA representing cells at that distance
     cA.push([]);
     //loop  through cells at the previous distance
@@ -252,11 +269,12 @@ hexPlaneMap.prototype.cellWithinX = function (cid,x) {
 hexPlaneMap.prototype.random = function (opts) {
   opts = typeof opts === "undefined" ? {} : opts;
   opts.display = typeof opts.display === "undefined" ? false : opts.display;
+
+  this.name = this.RNG.rndName();
   if(opts.display){
     map.displaySetup();
   }
 
-  this.name = nameGen(this.RNG).capFirst();
   var n = Math.floor(this.RNG.RNDBias(this._min, this._max, this._bias, this._influence));
   this._rndC = n;
 
@@ -601,13 +619,6 @@ hexPlaneMap.prototype.popData = function () {
   }
 
   return data;
-}
-hexPlaneMap.prototype.cellsByTerrain = function () {
-  var cA = {"0":[],"1":[],"2":[],"3":[],"4":[]};
-  for (var x in this.cells){
-    cA[this.cells.terrain].push(x);
-  }
-  return cA;
 }
 //axial neighboors
 hexPlaneMap.prototype.neighboors = function (cell) {
