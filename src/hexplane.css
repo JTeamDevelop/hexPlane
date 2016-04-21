@@ -8,6 +8,16 @@ h1, h2, h3 {
 .dropdown:hover .dropdown-content {
   display: block;
 }
+#logo{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+#time{
+  margin-left: 0.5em;
+  padding:0.5em;
+}
 #menu {
   position:absolute;
   top:0;
@@ -109,7 +119,7 @@ h1, h2, h3 {
   transform: translate(-50%, -50%);
   padding: 1em;
   display: none;
-  background-color: rgba(255,255,255,0.5);
+  background-color: rgba(255,255,255,0.75);
   border: 1px solid black;
   border-radius: 10px;
 }
@@ -205,11 +215,6 @@ h1, h2, h3 {
 .buttons {
     padding: 3px;
     margin: 3px;
-}
-.buttons.center {
-    padding-top: 0.6em;
-    margin-top: 0.6em;
-    text-align: center;
 }
 .buttons button {
     background: #876;

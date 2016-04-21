@@ -29,6 +29,7 @@ var COLORS = ["red","green","blue","white","black"];
 var HTMLCOLOR = ["AntiqueWhite","Blue","Brown","Chartreuse","Chocolate","Coral","Crimson","Cyan","DarkBlue","DarkGreen"
     ,"Orange","DarkViolet","DeepPink","Gold","Green","Indigo","DeepSkyBlue","Lime","MediumPurple","OrangeRed","Orchid"
     ,"Purple","Red","Yellow"];
+var POPSIZE = ["Villages","Towns","Cities","Large City","Metropolis"];
 var NATIONSAVE = {"Disorder":["Guard","Barracks"], "Uprising":["Army","Army"], "Poverty":["Merchant","Market"]
     , "Ignorance":["Scholar","School"], "Despair":["Minister","Church"], "Corruption":["Magistrate","Court"]};
 var TROUBLE = [{name:"Ancient Curse",overcome:["Wealth","Ignorance"]},{name:"Angry Dead",overcome:["Military","Uprising"]}
@@ -53,6 +54,14 @@ var TROUBLE = [{name:"Ancient Curse",overcome:["Wealth","Ignorance"]},{name:"Ang
     ,{name:"Undeveloped",overcome:["Wealth","Poverty"]},{name:"Wasted Production",overcome:["Wealth","Ignorance"]}
     ,{name:"Xenophobia",overcome:["Military","Disorder"]}
   ];
+var TROUBLEOVERCOME = {
+  "Ignorance":["Clever","Subtle","Wise"],
+  "Poverty":["Clever","Mighty","Wise"],
+  "Disorder":["Bold","Mighty","Quick"],
+  "Uprising":["Bold","Mighty","Quick"],
+  "Dispair":["Quick","Subtle","Wise"],
+  "Corruption":["Bold","Clever","Subtle"]
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 function newCard(RNG){
@@ -195,9 +204,10 @@ var hexPlaneMap = function (seed) {
   // [.86,.5][0,1][-.866,.5][-.866,-.5][0,-1][.866,-.5]
   this.std_n = [[0,1],[-1,1],[-1,0],[0,-1],[1,-1],[1,0]];
 
-  this._set={};
-  this._queue={};
   this.cells = {};
+  //action queue
+  this._queue={};
+  this._set={};
   this._sites={};
   this._ruins={};
   this._people={};
@@ -206,7 +216,8 @@ var hexPlaneMap = function (seed) {
   this._artifacts = {};
   this._empires={};
   this._zones = [];
-  this._time=[0,0,0];
+  //time is total days
+  this._time=0;
 
   this._heroes = {};
   this._currentHero = {};
@@ -565,22 +576,8 @@ hexPlaneMap.prototype.troubles = function () {
       pop = this.cells[x].pop;
       //max trouble score is n
       n = max[pop.size-1];
-      //include trouble array
-      pop.troubles = [];
-      //loop while n is not 0
-      while(n>0){
-        //initial trouble strength is always 1 but maybe two if n>1
-        i=1;
-        if(n>1){
-          i = this.RNG.rndInt(1,2);
-        }
-        //lower max trouble score
-        n-=i;
-        //get random trouble - just the id to keep data low
-        tid = this.RNG.rndInt(0,TROUBLE.length-1);
-        //push the trouble with strength
-        pop.troubles.push([tid,i]);
-      }
+      //this is the number of troubles in the hex
+      pop.troubles = n;
     }
   }
 }
@@ -756,6 +753,9 @@ hexPlaneMap.prototype.makeClimate = function (display) {
     }
   }
 
+  if(display) {
+    $("#logo").hide();
+  }
   initialize();
 
   var N = {};

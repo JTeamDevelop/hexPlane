@@ -33,6 +33,13 @@ CLASSES = ["Fighter","Brute","Soldier","Officer","Elemental","Psion","Wizard","D
 DOMAINS = ["Air", "Animal", "Artifice", "Charm", "Community", "Darkness", "Earth", "Fire", "Glory", "Healing", "Knowledge", "Law",
   "Liberation", "Luck", "Magic", "Nobility", "Plant", "Protection", "Righteousness", "Strength", "Sun", "Travel", "Trickery",
   "War", "Water", "Weather"];
+COLORDOMAINS = {
+	"green":["Air","Animal","Healing","Plant","Weather"],
+	"red":["Fire","Liberation","Luck","Sun","War"],
+	"yellow":["Artifice","Earth","Knowledge","Nobility","Travel"],
+	"white":["Glory","Law","Protection","Righteousness","Strength"],
+	"black":["Charm","Community","Darkness","Trickery","Water"]
+}
 DOMAINSDOOM = ["Chaos", "Darkness", "Death", "Destruction", "Evil", "Madness"];
 POWERGROUPS = {"Weather":["Gaseous Form", "Ice Storm", "Lightning", "Cold Blast", "Flight", "Weather Control", "Wind Control", "Resist Cold"],
   "Animals":["Chameleon", "Claws/Fangs", "Animal Control", "Poison", "Size","Shapeshifter", "Shrinking", "Webbing", "Light Armor",  "Wall Crawling"],
@@ -84,6 +91,10 @@ CPX.makeHero = function (opts) {
   var stats = [2,1,1,0,0,-1];
   hero.name = hRNG.rndName();
   hero.stats = hRNG.shuffleAr(stats);
+	hero.bonds = [];
+	hero.resources = {};
+	hero.equipment = [];
+	hero.xp = 0;
 	hero.mph = 5;
   hero.gifts = 1;
   hero.powers = 4;
@@ -143,6 +154,56 @@ CPX.heroDisplay = function (hero) {
   return "<div class=hero data-uid="+hero.uid+" data-lv="+hero.levels.length+">"+html+"</div>";
 }
 
+hexPlaneMap.prototype.heroAddResource = function (resource) {
+	var hero = this._currentHero;
+	if(objExists(hero.resources[resource])){
+		hero.resources[resource]++;
+	}
+	else {
+		hero.resources[resource] = 1;
+	}
+}
+hexPlaneMap.prototype.heroOvercome = function (cid,trouble) {
+	var hero = this._currentHero, cell=this.cells[cid], overcome = trouble.overcome[1]
+		, ability = TROUBLEOVERCOME[overcome].random()
+		, ids = ABILITIES.indexOf(ability)
+		, bonus = hero.stats[ids]
+		, R = xorRNG.DWRoll();
+
+		if(R+bonus > 6){
+			ability = TROUBLEOVERCOME[overcome].random();
+			ids = ABILITIES.indexOf(ability);
+			bonus = hero.stats[ids];
+			R = xorRNG.DWRoll();
+
+			if(R+bonus+1 > 6) {
+				this._currentHero.bonds.push([this._time,"help",cid,cell.pop.eid]);
+				this.heroAddResource(this.empireRandomResource(cell.pop.eid));
+				return true;
+			}
+			//failure yields XP
+			hero.xp++;
+			return false;
+		}
+		else {
+			//failure yields XP
+			hero.xp++;
+			ability = TROUBLEOVERCOME[overcome].random();
+			ids = ABILITIES.indexOf(ability);
+			bonus = hero.stats[ids];
+			R = xorRNG.DWRoll();
+
+			if(R+bonus-1 > 6) {
+				this._currentHero.bonds.push([this._time,"help",cid,cell.pop.eid]);
+				this.heroAddResource(this.empireRandomResource(cell.pop.eid));
+				return true;
+			}
+			//failure yields XP
+			hero.xp++;
+			return false;
+		}
+
+}
 hexPlaneMap.prototype.heroRandomPlace = function (hid) {
 	var cA = this.cellsByTerrain().land;
 	this._heroes[hid].location = cA.random(this.RNG);
@@ -154,15 +215,29 @@ hexPlaneMap.prototype.heroMakeCurrent = function (hid) {
 	this._currentHero=this._heroes[hid];
 	this.displayCurrentHeroInfo(hid);
 }
-hexPlaneMap.prototype.heroMove = function (cid) {
-	this._currentHero.location = cid;
+hexPlaneMap.prototype.heroMove = function (opts) {
+	//make the opt hero the current hero
+	this.heroMakeCurrent(opts.hid);
+	//set the hero's location to the opts cid
+	this._currentHero.location = opts.cid;
+	//display the move on the hex map
 	this.displayHeroMove(this._currentHero.uid);
+	//call the cell enter function
+	this.cellEnter(opts.cid);
 }
 hexPlaneMap.prototype.heroCellMoveCheck = function (cid) {
+	//get the array of cells within one
 	var cA= this.cellWithinX(this._currentHero.location,1)[1];
+	//if the cell clicked is in the array then queue the move
 	if(cA.contains(cid)){
-		this.heroMove(cid);
+		//determine the time the move will take
+		var nT = this._time+Math.floor(400/8/this._currentHero.mph);
+		//add a queue action for the move
+		this.queueNew(nT,"heroMove",{cid:cid,hid:this._currentHero.uid});
+		//check the queue for the next action
+		this.queueCheck();
 	}
+	//if no move return false
 	return false;
 }
 hexPlaneMap.prototype.heroRandomGen = function () {

@@ -24,7 +24,8 @@ RNG.prototype.TrueFalse = function (){
     return false;
   }
 }
-RNG.prototype.FateRoll = function (){ return this.multiRoll (1, 3, 4)-8; }
+RNG.prototype.FateRoll = function (){ return this.multiRoll(1, 3, 4)-8; }
+RNG.prototype.DWRoll = function (){ return this.multiRoll(1, 6, 2); }
 RNG.prototype.rndName = function () {
     return NameGenerator(this);
 }
@@ -168,7 +169,7 @@ Array.prototype.remove = function (item) {
 }
 //Pick a random item from an array - provided RNG or ueses math.random if not fed
 Array.prototype.random = function (RNG) {
-	RNG = typeof RNG === "undefined" ? Math : RNG;
+	RNG = typeof RNG === "undefined" ? xorRNG : RNG;
   var i = RNG.random()*this.length;
   return this[Math.floor(i)];
 }
