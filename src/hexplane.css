@@ -8,6 +8,16 @@ h1, h2, h3 {
 .dropdown:hover .dropdown-content {
   display: block;
 }
+#logo{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+#time{
+  margin-left: 0.5em;
+  padding:0.5em;
+}
 #menu {
   position:absolute;
   top:0;
@@ -74,6 +84,9 @@ h1, h2, h3 {
   border: 1px solid black;
   border-radius: 5px;
 }
+#heroOptions button{
+  width: 150px;
+}
 
 #hexStats {
   border: 1px solid black;
@@ -109,7 +122,7 @@ h1, h2, h3 {
   transform: translate(-50%, -50%);
   padding: 1em;
   display: none;
-  background-color: rgba(255,255,255,0.5);
+  background-color: rgba(255,255,255,0.75);
   border: 1px solid black;
   border-radius: 10px;
 }
@@ -150,9 +163,24 @@ h1, h2, h3 {
 #notify .hero:hover {
   background-color: rgba(155,255,205,0.75);
 }
+#notify .ability {
+  margin:0 1em;
+}
+.ability .title {
+  font-size:0.8em;
+}
+#heroCurrent .ability{
+  margin:0 0.3em;
+}
+#heroCurrent .ability .title{
+  font-size:0.65em;
+}
 
 .gClimate {
   opacity: 0;
+}
+.equipped {
+  font-style: italic;
 }
 
 #TCKey {
@@ -182,6 +210,12 @@ h1, h2, h3 {
 .selected {
   fill: yellow;
 }
+.inline {
+  display:inline-block;
+}
+.threeColumn {
+  width: 32%;
+}
 
 .tooltipsy
 {
@@ -198,6 +232,33 @@ h1, h2, h3 {
 	margin-right: 5px;
 	display: inline-block;
 }
+/* ==========================================================================
+   Attack display
+   ========================================================================== */
+.foe {
+  margin-bottom:0.5em;
+  padding:0.25em;
+  border: 1px solid black;
+  text-align: center;
+}
+.foe.selected {
+  background-color: rgba(255,155,155,0.75);
+}
+.foe:hover {
+  cursor: pointer;
+  background-color: rgba(255,155,155,0.75);
+}
+
+#attackOptions{
+  position:absolute;
+  right:0;
+}
+#attackOptions button {
+  width:75px;
+}
+#attackOptions button.selected {
+    background: #987;
+}
 
 /* ==========================================================================
    Buttons classes
@@ -205,11 +266,6 @@ h1, h2, h3 {
 .buttons {
     padding: 3px;
     margin: 3px;
-}
-.buttons.center {
-    padding-top: 0.6em;
-    margin-top: 0.6em;
-    text-align: center;
 }
 .buttons button {
     background: #876;

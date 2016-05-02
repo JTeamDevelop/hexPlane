@@ -1,3 +1,17 @@
+hexPlaneMap.prototype.empirePeople = function (eid) {
+  var people = [], empire = this._empires[eid];
+  for (var i = 0; i < empire.pop.length; i++) {
+    people.push(this._people[empire.pop[i]]);
+  }
+  return people;
+}
+hexPlaneMap.prototype.empireRandomResource = function (eid) {
+  var empire = this._empires[eid],
+    pop = this._people[empire.pop.random()],
+    color = pop.colors.random(),
+    resource = COLORDOMAINS[color].random();
+  return resource;
+}
 hexPlaneMap.prototype.empireOpenN = function (empire) {
   var nids = [], nC=[];
   for (var i = 0; i < empire.cells.length; i++) {
@@ -56,36 +70,45 @@ hexPlaneMap.prototype.empireExpand = function (eid) {
     return false;
   }
 
+  function powerUp () {
+    var cell = map.cells[empire.cells.random(map.RNG)];
+    if(cell.pop.size <2){
+      cell.pop.size++;
+      empire.power--;
+    }
+    else if (cell.pop.size==3) {
+      if(map.RNG.random()<0.25){
+        cell.pop.size++;
+        empire.power--;
+      }
+    }
+    else if (cell.pop==4) {
+      if(map.RNG.random()<0.05){
+        cell.pop.size++;
+        empire.power--;
+      }
+    }
+  }
+
   var cell = {}, cid="";
   while (empire.power > 0.5) {
     if(!absorb()){
       //absorb new cell
       if(map.RNG.random()<0.75) {
         cid = map.empireOpenN(empire).random(map.RNG);
-        cell = map.cells[cid];
-        cell.pop = {size:1,eid:eid};
-        empire.cells.push(cid);
-        empire.power--;
+        if(cid != null) {
+          cell = map.cells[cid];
+          cell.pop = {size:1,eid:eid};
+          empire.cells.push(cid);
+          empire.power--;
+        }
+        else {
+          powerUp();
+        }
       }
       //add power to current cell pop
       else {
-        cell = map.cells[empire.cells.random(map.RNG)];
-        if(cell.pop.size <2){
-          cell.pop.size++;
-          empire.power--;
-        }
-        else if (cell.pop.size==3) {
-          if(map.RNG.random()<0.25){
-            cell.pop.size++;
-            empire.power--;
-          }
-        }
-        else if (cell.pop==4) {
-          if(map.RNG.random()<0.05){
-            cell.pop.size++;
-            empire.power--;
-          }
-        }
+        powerUp();
       }
     }
   }

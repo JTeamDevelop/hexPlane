@@ -16,19 +16,6 @@ hexPlaneMap.prototype.key = function () {
     d3.select("#hexKey").append("div")
       .attr("id", "TCKey")
       .html(title+tkey+ckey);
-
-/*
-  var next = "<div class=buttons><button type=button id=btnActMonth>Progress One Month</button></div>"
-  d3.select("#hexKey").append("div")
-    .attr("id", "actions")
-    .html(next);
-
-  var map =this;
-  d3.select("#btnActMonth").on("click", function(){
-    map.act();
-  });
-*/
-
 }
 hexPlaneMap.prototype.displaySetup = function () {
   var map = this;
@@ -171,20 +158,6 @@ hexPlaneMap.prototype.displayHex = function (cid) {
       }
     }});
 }
-hexPlaneMap.prototype.displayPoint = function (cid,gclass,data) {
-
-  d3.select(".g"+gclass).append("circle").data(data)
-  .attr("class",gclass)
-  .attr("cx", function(cdata){
-    return cellCenter(map,cdata)[0];
-  })
-  .attr("cy", function(cdata){
-    return cellCenter(map,cdata)[1];
-  })
-  .attr("r", function(cdata){ return size(cdata); })
-  .style({fill: function(cdata){ return color(cdata); }});
-
-}
 hexPlaneMap.prototype.makePoints = function (groupclass,cellclass,data,size,color) {
   var svg = d3.select(".map"), map=this;
 
@@ -235,47 +208,52 @@ hexPlaneMap.prototype.displayCellInfo = function (cell) {
     html+="</br>"+ruin.tags[0]+" ("+sizes[Math.floor(ruin.size)-1]+")";
   }
 
-  html+="</br>"+data.tags.join(" ,");
-
   d3.select("#dInfo").html(html);
   $("#dInfo").show();
 }
 hexPlaneMap.prototype.popDisplay = function () {
 	var svg = d3.select(".map"), map=this, popdata = map.popData();
 
-  this.makePoints('gSites','site',popdata.sites,function () { return 3; },function () { return 'Gold'; });
-  this.makePoints('gRuins','ruin',popdata.ruins,function () { return 3; },function () { return 'gray'; });
-  this.makePoints('gEmpires','empire',popdata.pop,function () { return 3; },function (empire) { return map._empires[empire.data.eid].color; });
+  this.makePoints('gSites','site point',popdata.sites,function () { return 3; },function () { return 'Gold'; });
+  this.makePoints('gRuins','ruin point',popdata.ruins,function () { return 3; },function () { return 'gray'; });
+  this.makePoints('gEmpires','empire point',popdata.pop,function () { return 3; },function (empire) { return map._empires[empire.data.eid].color; });
 
   var sizes = ["Villages","Towns","Cities","Large City","Metropolis"];
 
   this.displayComplete();
 
+  function ttData (cell) {
+    var html="<strong>"+TERRAIN[cell.terrain].name+" ("+CLIMATE[cell.climate].name+")</strong>";
+
+    if(objExists(cell.pop)){
+      var empire = map._empires[cell.pop.eid]
+      html+="</br>"+empire.name+" "+sizes[Math.floor(cell.pop.size)-1];
+    }
+
+    if(objExists(cell.site)){
+      var site = cell.site;
+      html+="</br>"+site.tags[0]
+    }
+
+    if(objExists(cell.ruin)){
+      var ruin = cell.ruin;
+      html+="</br><strong>"+ruin.race+" Ruin</strong>";
+      html+="</br>"+ruin.tags[0]+" ("+sizes[Math.floor(ruin.size)-1]+")";
+    }
+
+    return html;
+  }
+
 	$('path.hex').tooltipsy({
-		content: function(cell) {
-			var data = cell[0].__data__.data;
-			var html="<strong>"+TERRAIN[data.terrain].name+" ("+CLIMATE[data.climate].name+")</strong>";
-
-			if(typeof data.pop !== "undefined"){
-        html+="</br>"+sizes[data.pop.size-1];
-			}
-
-      if(typeof data.site !== "undefined"){
-        var site = data.site;
-        html+="</br>"+site.tags[0]
-        html+="</br>"+site.tags[1]
-      }
-
-      if(typeof data.ruin !== "undefined"){
-        var ruin = data.ruin;
-        html+="</br><strong>"+ruin.race+" Ruin</strong>";
-        html+="</br>"+ruin.tags[0]+" ("+ruin.size+")";
-      }
-
-      html+="</br>"+data.tags.join(" ,");
-
-			return html;
-		},
+		content: function(cell){
+      return ttData(cell[0].__data__.data);
+    },
+    className: 'tooltipsy ttipCell'
+	});
+  $('.point').tooltipsy({
+		content: function(cell){
+      return ttData(map.cells[cell[0].__data__[0]+","+cell[0].__data__[1]]);
+    },
     className: 'tooltipsy ttipCell'
 	});
 

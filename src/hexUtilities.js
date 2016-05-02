@@ -1,4 +1,5 @@
 CPX = {};
+COLORS = ["red","green","yellow","white","black"];
 
 //RNG function - based on seedrandom.js for repeatability and it uses xor4096 for extensive period
 RNG = function(seed){
@@ -24,10 +25,64 @@ RNG.prototype.TrueFalse = function (){
     return false;
   }
 }
-RNG.prototype.FateRoll = function (){ return this.multiRoll (1, 3, 4)-8; }
-RNG.prototype.rndName = function () {
-    return NameGenerator(this);
+RNG.prototype.rarity = function (){
+	var r= ["r","r","r","r","r","r","r","m"],
+		b= ["c","c","c","c","c","c","c","c","c","c","u","u","u","u","x"],
+		rarity = b.random(this);
+
+	if(rarity == "x"){
+		return r.random(this);
+	}
+	return rarity;
 }
+RNG.prototype.fiveColor = function (){
+	var cRNG = this;
+	//define single color
+	function sC() {
+		return [COLORS.random(cRNG)];
+	}
+	//define multicolor
+	function mC() {
+		var m = [3,3,3,3,3,4,4,5], nc = [2,2,2,"more"], n = nc.random(cRNG), colors=[];
+		if(n == "more"){
+			n = m.random(cRNG);
+		}
+		//for n push a color
+		for (var i = 0; i < n; i++) {
+			colors.push(COLORS.random(cRNG));
+		}
+		return colors;
+	}
+
+	var c =[sC,sC,sC,sC,sC,sC,sC,sC,sC,mC];
+	return c.random(this)();
+}
+RNG.prototype.dice = function (dice) {
+	var cRNG = this, total = dice.split(","), R=0, n = 0, die = 0, bonus= 0;
+	total.forEach(function(D){
+		n = D.split("d"), bonus= 0;
+		if(D.includes("+")){
+			die = n[1].split("+");
+			bonus = Number(die[1]);
+		}
+		else if (D.includes("-")) {
+			die = n[1].split("-");
+			bonus = -Number(die[1]);
+		}
+		else {
+			die = n[1];
+		}
+
+		n = Number(n[0]);
+		die = Number(die[0]);
+		R += cRNG.multiRoll(1,die,n)+bonus;
+	});
+	return R;
+}
+RNG.prototype.UID = function (n){ return makeUID(n,this); }
+RNG.prototype.FateRoll = function (){ return this.multiRoll(1, 3, 4)-8; }
+RNG.prototype.DWRoll = function (){ return this.multiRoll(1, 6, 2); }
+RNG.prototype.rndName = function () { return NameGenerator(this); }
 RNG.prototype.rndColor = function () {
   var R = this;
   function randHex() {
@@ -164,11 +219,12 @@ Array.prototype.contains = function (item) {
 //Remove Item from array
 Array.prototype.remove = function (item) {
   var i = this.indexOf(item);
+	if(i == -1){ return; }
   this.splice(i,1);
 }
 //Pick a random item from an array - provided RNG or ueses math.random if not fed
 Array.prototype.random = function (RNG) {
-	RNG = typeof RNG === "undefined" ? Math : RNG;
+	RNG = typeof RNG === "undefined" ? xorRNG : RNG;
   var i = RNG.random()*this.length;
   return this[Math.floor(i)];
 }
