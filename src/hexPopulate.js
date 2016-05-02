@@ -1,41 +1,51 @@
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
-mapRaces = function (rarity,RNG) {
-  var monstrous = ["Nightelf","Orc","Goblin","Hobgoblin","Ogre","Troll","Gnoll","Minotaur","Lizardman"];
+mapRaces = function (rarity,cRNG,water) {
+  var monstrous = ["Nightelf","Orc","Goblin","Hobgoblin","Ogre","Troll","Gnoll",
+    "Minotaur","Lizard-people","Snake-people","Dog-people","Cat-people","Mantis-people","Naga"];
   var smallfolk = ["Gnome","Halfling","Kobold"];
-  var demi = ["Elf","Elf","Dwarf","Dwarf",smallfolk.random(RNG),monstrous.random(RNG),"Genasi","Merfolk","Naga"];
+  var demi = ["Elf","Elf","Dwarf","Dwarf",smallfolk.random(cRNG),monstrous.random(cRNG),"Genasi"];
   var lycanthrope = ["Werewolf","Wereboar","Wererat","Weretiger","Werebear","Wereraven"];
 
-  function hybrid (RNG) {
+  function hybrid () {
     var type = ["Ape","Badger","Bat","Bear","Beetle","Boar","Cat","Cetnipede","Crab","Crocodile","Deer","Dog","Eagle","Elephant",
-        "Frog","Goat","Horse","Lion","Mantis","Octopus","Owl","Panther","Rat","Raven","Rhinoceros","Scorpion","Shark","Snake",
+        "Frog","Goat","Horse","Lion","Mantis","Owl","Panther","Rat","Raven","Rhinoceros","Scorpion","Snake",
         "Spider","Tiger","Vulture","Wasp","Weasel","Wolf"];
 
-    return type.random(RNG)+"-man";
+    return type.random(cRNG)+"-people";
   }
 
-  function profs (RNG) {
-      var type = ["Mystic Knight","Wizard","Priest","Monk"];
-      return type.random(RNG);
+  function profs (base) {
+    var type = ["Mystic Knight","Wizard","Priest","Monk"];
+    return base.random(cRNG)+" "+type.random(cRNG);
   }
 
-  function rareCombined(RNG) {
-    var base = [demi.random(RNG),monstrous.random(RNG),hybrid(RNG)];
-    return base.random(RNG)+" "+profs(RNG);
+  var waterRaces = {
+    c:["Merman","Sea-elf","Sahaugain"],
+    u:["Octopus-people","Shark-people","Eel-people","Crab-people","Naga"],
+    r:["Dragon","Dragon","Elementals","Elementals","Giant","Golem"],
+    m:[]
   }
 
   var races = {
-      c:["Human",demi.random(RNG)],
-      u:[demi.random(RNG),monstrous.random(RNG),hybrid(RNG),profs(RNG)],
-      r:["Aboleth","Dragon","Dragon","Elementals","Giant","Golem","Treant",rareCombined(RNG),rareCombined(RNG)],
-      m:["Dragon Clan","Elemental Conflux","Demigods","Kaiju"]
-  };
+    c:["Human",demi.random(cRNG)],
+    u:[demi.random(cRNG),monstrous.random(),hybrid(),profs(["Human",demi.random(cRNG)])],
+    r:["Dragon","Dragon","Elementals","Elementals","Giant","Golem","Treant",profs([demi.random(cRNG),monstrous.random(cRNG),hybrid(cRNG)]),profs([demi.random(cRNG),monstrous.random(cRNG),hybrid(cRNG)])],
+    m:["Dragon Clan","Elemental Conflux","Demigods"]
+  }
+  if(water){
+    races.c=waterRaces.c;
+    races.u=waterRaces.u;
+    races.r=waterRaces.r;
+    races.u.push(profs(races.c));
+    races.r.push(profs(races.u),profs(races.u));
+  }
 
   if(rarity=="l"){
     rarity = "u";
   }
 
-  return races[rarity].random(RNG);
+  return races[rarity].random(cRNG);
 }
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -112,17 +122,9 @@ hexPlaneMap.prototype.populate = function () {
 //Adds races
 hexPlaneMap.prototype.newRace = function (card,cid) {
   cid = typeof cid === "undefined" ? this.noPopCell() : cid;
-  var race = mapRaces(card.rarity,this.RNG), map = this, cell = map.cells[cid];
-
-  /*
-  var alltags = [], tlist = ["types","supertypes","subtypes"];
-  for (var i = 0; i < tlist.length; i++) {
-    if(card[tlist[i]].length>0){
-      alltags = alltags.concat(card[tlist[i]]);
-    }
-  }
-  alltags.unique();
-  */
+  var map = this, cell = map.cells[cid];
+  var water = cell.terrain == 0 ? true : false;
+  var race = mapRaces(card.rarity,this.RNG,water);
 
   var tags=[];
   if(card.tags.contains("power")) {

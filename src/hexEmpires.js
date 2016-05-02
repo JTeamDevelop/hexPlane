@@ -1,3 +1,10 @@
+hexPlaneMap.prototype.empirePeople = function (eid) {
+  var people = [], empire = this._empires[eid];
+  for (var i = 0; i < empire.pop.length; i++) {
+    people.push(this._people[empire.pop[i]]);
+  }
+  return people;
+}
 hexPlaneMap.prototype.empireRandomResource = function (eid) {
   var empire = this._empires[eid],
     pop = this._people[empire.pop.random()],

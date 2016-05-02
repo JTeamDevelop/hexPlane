@@ -84,6 +84,9 @@ h1, h2, h3 {
   border: 1px solid black;
   border-radius: 5px;
 }
+#heroOptions button{
+  width: 150px;
+}
 
 #hexStats {
   border: 1px solid black;
@@ -160,9 +163,24 @@ h1, h2, h3 {
 #notify .hero:hover {
   background-color: rgba(155,255,205,0.75);
 }
+#notify .ability {
+  margin:0 1em;
+}
+.ability .title {
+  font-size:0.8em;
+}
+#heroCurrent .ability{
+  margin:0 0.3em;
+}
+#heroCurrent .ability .title{
+  font-size:0.65em;
+}
 
 .gClimate {
   opacity: 0;
+}
+.equipped {
+  font-style: italic;
 }
 
 #TCKey {
@@ -192,6 +210,12 @@ h1, h2, h3 {
 .selected {
   fill: yellow;
 }
+.inline {
+  display:inline-block;
+}
+.threeColumn {
+  width: 32%;
+}
 
 .tooltipsy
 {
@@ -207,6 +231,33 @@ h1, h2, h3 {
 	height: 10px;
 	margin-right: 5px;
 	display: inline-block;
+}
+/* ==========================================================================
+   Attack display
+   ========================================================================== */
+.foe {
+  margin-bottom:0.5em;
+  padding:0.25em;
+  border: 1px solid black;
+  text-align: center;
+}
+.foe.selected {
+  background-color: rgba(255,155,155,0.75);
+}
+.foe:hover {
+  cursor: pointer;
+  background-color: rgba(255,155,155,0.75);
+}
+
+#attackOptions{
+  position:absolute;
+  right:0;
+}
+#attackOptions button {
+  width:75px;
+}
+#attackOptions button.selected {
+    background: #987;
 }
 
 /* ==========================================================================

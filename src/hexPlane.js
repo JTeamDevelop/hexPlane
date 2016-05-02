@@ -25,43 +25,12 @@ var TERRAIN = [{name:"Water",color:"blue"}, {name:"Mountains",color:"brown"},  {
   , {name:"Plains",color:"LightGreen"}, {name:"Desert",color:"Khaki"}];
 var CLIMATE = [{name:"Artic",color:"blue"}, {name:"Continental",color:"LightBlue"},  {name:"Temperate",color:"green"}
     , {name:"Subtropical",color:"LightGreen"}, {name:"Tropical",color:"DarkGreen"}];
-var COLORS = ["red","green","blue","white","black"];
 var HTMLCOLOR = ["AntiqueWhite","Blue","Brown","Chartreuse","Chocolate","Coral","Crimson","Cyan","DarkBlue","DarkGreen"
     ,"Orange","DarkViolet","DeepPink","Gold","Green","Indigo","DeepSkyBlue","Lime","MediumPurple","OrangeRed","Orchid"
     ,"Purple","Red","Yellow"];
 var POPSIZE = ["Villages","Towns","Cities","Large City","Metropolis"];
 var NATIONSAVE = {"Disorder":["Guard","Barracks"], "Uprising":["Army","Army"], "Poverty":["Merchant","Market"]
     , "Ignorance":["Scholar","School"], "Despair":["Minister","Church"], "Corruption":["Magistrate","Court"]};
-var TROUBLE = [{name:"Ancient Curse",overcome:["Wealth","Ignorance"]},{name:"Angry Dead",overcome:["Military","Uprising"]}
-    ,{name:"Bad Reputation",overcome:["Social","Corruption"]},{name:"Barren Surroundings",overcome:["Wealth","Poverty"]}
-    ,{name:"Class Hatred",overcome:["Social","Despair"]},{name:"Conquering Heirs",overcome:["Military","Uprising"]}
-    ,{name:"Contaminated Land",overcome:["Wealth","Poverty"]},{name:"Corrupt Leadership",overcome:["Social","Corruption"]}
-    ,{name:"Covetous Polity",overcome:["Military","Disorder"]},{name:"Crushed Spirits",overcome:["Social","Dispair"]}
-    ,{name:"Dark Wizards",overcome:["Military","Uprising"]},{name:"Demagogue",overcome:["Social","Dispair"]}
-    ,{name:"Destructive Customs",overcome:["Wealth","Ignorance"]},{name:"Disputed Possession",overcome:["Military","Uprising"]}
-    ,{name:"Disunity",overcome:["Social","Dispair"]},{name:"Ethnic Feuding",overcome:["Social","Dispair"]}
-    ,{name:"Exceptional Poverty",overcome:["Wealth","Poverty"]},{name:"Exiled Lord",overcome:["Military","Uprising"]}
-    ,{name:"Flooding",overcome:["Wealth","Poverty"]},{name:"Harsh Conditions",overcome:["Wealth","Poverty"]}
-    ,{name:"Hazardous Resource",overcome:["Wealth","Ignorance"]},{name:"Raiders",overcome:["Military","Disorder"]}
-    ,{name:"Inaccessible",overcome:["Wealth","Poverty"]},{name:"Mercenary Populace",overcome:["Social","Corruption"]}
-    ,{name:"Monsters",overcome:["Military","Disorder"]},{name:"Murderous Heirs",overcome:["Military","Uprising"]}
-    ,{name:"No Workers",overcome:["Wealth","Poverty"]},{name:"Pervasive Hunger",overcome:["Wealth","Poverty"]}
-    ,{name:"Recalcitrant Locals",overcome:["Military","Disorder"]},{name:"Recurrent Sickness",overcome:["Wealth","Ignorance"]}
-    ,{name:"Riotous Thugs",overcome:["Military","Disorder"]},{name:"Secret Society",overcome:["Social","Corruption"]}
-    ,{name:"Severe Damage",overcome:["Wealth","Poverty"]},{name:"Sinister Cult",overcome:["Social","Corruption"]}
-    ,{name:"Things From Below",overcome:["Military","Disorder"]},{name:"Doom Cult",overcome:["Social","Corruption"]}
-    ,{name:"Doom Spawn",overcome:["Military","Uprising"]},{name:"Toxic Process",overcome:["Wealth","Ignorance"]}
-    ,{name:"Undeveloped",overcome:["Wealth","Poverty"]},{name:"Wasted Production",overcome:["Wealth","Ignorance"]}
-    ,{name:"Xenophobia",overcome:["Military","Disorder"]}
-  ];
-var TROUBLEOVERCOME = {
-  "Ignorance":["Clever","Subtle","Wise"],
-  "Poverty":["Clever","Mighty","Wise"],
-  "Disorder":["Bold","Mighty","Quick"],
-  "Uprising":["Bold","Mighty","Quick"],
-  "Dispair":["Quick","Subtle","Wise"],
-  "Corruption":["Bold","Clever","Subtle"]
-};
 
 /////////////////////////////////////////////////////////////////////////////////
 function newCard(RNG){
@@ -221,6 +190,7 @@ var hexPlaneMap = function (seed) {
 
   this._heroes = {};
   this._currentHero = {};
+  this._currentEncounter = [];
 }
 hexPlaneMap.prototype.noPopCell = function () {
   var cA = [];
@@ -323,9 +293,9 @@ hexPlaneMap.prototype.colorTags = function (card) {
   var tags = [];
   var T = {
     white:["Light","Healing","Defense","Protection","Law","Peace","Community","Equality"],
-    blue:["Water","Air","Ice","Illusion","Divination","Logic","Knowledge","Trickery","Control"],
-    green:["Life","Nature","Forests","Beasts","Transmutation","Strenth","Growth","Regeneration"],
-    red:["Fire","Earth","Storms","Conjuration","Evocation","War","Fury","Chaos","Creativity"],
+    green:["Water","Air","Ice","Illusion","Divination","Logic","Knowledge","Trickery","Control"],
+    red:["Life","Nature","Forests","Beasts","Transmutation","Strenth","Growth","Regeneration"],
+    yellow:["Fire","Earth","Storms","Conjuration","Evocation","War","Fury","Chaos","Creativity"],
     black:["Darkness","Death","Illness","Necromancy","Corruption","Destruction","Domination","Greed"],
     gray:["Artifice","Machines","Technology","Golems"]
   }
@@ -421,10 +391,10 @@ hexPlaneMap.prototype.newSite = function (card,cell) {
 
   var T = {
     white:["Butte","Grassland","Orchard"],
-    blue:["River","Waterfalls","Geyser","Lake","Cenote"],
+    black:["River","Waterfalls","Geyser","Lake","Cenote"],
     green:["Forest"],
     red:["Mountain","Volcano","Mesa","Hoodoos","Canyon","Caves"],
-    black:["Swamp","Badlands","Bog"]
+    yellow:["Swamp","Badlands","Bog"]
   }
   T.gray = T.white.concat(T.blue,T.green,T.red,T.black);
 
@@ -513,7 +483,8 @@ hexPlaneMap.prototype.newRuin = function (card,cell) {
   tags = tags.unique();
 
   //All ruins get a race
-  var race = mapRaces(card.rarity,this.RNG);
+  var water = this.cells[cell].terrain == 0 ? true : false;
+  var race = mapRaces(card.rarity,this.RNG,water);
   var ruin = {
       rarity:card.rarity,
       tags:tags,
