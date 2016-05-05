@@ -32,63 +32,6 @@ var POPSIZE = ["Villages","Towns","Cities","Large City","Metropolis"];
 var NATIONSAVE = {"Disorder":["Guard","Barracks"], "Uprising":["Army","Army"], "Poverty":["Merchant","Market"]
     , "Ignorance":["Scholar","School"], "Despair":["Minister","Church"], "Corruption":["Magistrate","Court"]};
 
-/////////////////////////////////////////////////////////////////////////////////
-function newCard(RNG){
-    var card={}, multi={c:1,u:1.5,r:3,m:6};
-    var r= ["r","r","r","r","r","r","r","m"];
-    var b= ["c","c","c","c","c","c","c","c","c","c","u","u","u","u",r.random(RNG)];
-  	card.rarity = b.random(RNG);
-
-    function sC() {
-      return [COLORS.random(RNG)];
-    }
-    function mC() {
-      var m = [3,3,3,3,3,4,4,5], nc = [2,2,2,m.random(RNG)], n = nc.random(RNG);
-      var c=[];
-      for (var i = 0; i < n; i++) {
-        c.push(COLORS.random(RNG));
-      }
-      return c;
-    }
-
-    var c =[sC,sC,sC,sC,sC,sC,sC,sC,sC,mC];
-    card.colors = c.random(RNG)();
-
-    card.tags = [];
-    var rt=["land","land","land","artifact","artifact","artifact","superhero"];
-    var t=["creature","power",rt.random(RNG)];
-    card.tags.push(t.random(RNG));
-
-    if(!card.tags.contains("artifact")){
-      if(!card.tags.contains("superhero")){
-        if(RNG.random()<0.05){
-          card.tags.push("artifact");
-        }
-      }
-    }
-    if(RNG.random()<0.02){
-      card.tags.push("legendary");
-    }
-
-    var power = {
-      c:[1,6,1,0.75],
-      u:[1,10,2,0.65],
-      r:[2,20,4,0.75],
-      m:[3,20,5,0.75]
-    },
-      bias=[];
-
-    if(card.tags.contains("land")){
-      card.power = multi[card.rarity];
-    }
-    else {
-      bias = power[card.rarity];
-      card.power = multi[card.rarity]*RNG.RNDBias(bias[0], bias[1], bias[2], bias[3]);
-    }
-
-    return card;
-}
-
 cellCenter = function (map,pos) {
   var width = map._hexSize * 2, horiz = 0 , height = 0, vert = 0;
   var c=map.center();
@@ -144,31 +87,14 @@ drawCell = function (map,pos) {
 }
 
 var hexPlaneMap = function (seed) {
-  this.uid = typeof seed === "undefined" ? makeUID(27) : seed;
+  this.uid = typeof seed === "undefined" ? makeUID(30) : seed;
   this.RNG = new RNG(this.uid);
 
-  this._width =document.getElementById('hexPlane').offsetWidth*.95;
-  this._height = document.getElementById('hexPlane').offsetHeight*.95;
+  this._type="Plane";
+  this._dT = 1;
   this._hexSize = 8;
   this._pointy = true;
   this._useZones = false;
-  this._water = 0.3;
-
-  this._probTerrain = [1,1,1,2,2,2,2,3,3,3,4];
-
-  //variables for random map - min & max bound ponts
-  //bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
-  this._min = 900, this._max = 2700, this._bias = 1800, this._influence = 1;
-
-	var map = this;
-  this._randomMapSize = function () {
-    var r = Math.floor(map.RNG.random()*14)+2;
-    return r;
-  }
-  this._randomZoneSize = function () {
-    var r = Math.floor(map.RNG.random()*14)+2;
-    return r;
-  }
 
   // [.86,.5][0,1][-.866,.5][-.866,-.5][0,-1][.866,-.5]
   this.std_n = [[0,1],[-1,1],[-1,0],[0,-1],[1,-1],[1,0]];
@@ -177,20 +103,26 @@ var hexPlaneMap = function (seed) {
   //action queue
   this._queue={};
   this._set={};
-  this._sites={};
-  this._ruins={};
   this._people={};
-  this._population={};
   this._doom = {};
-  this._artifacts = {};
   this._empires={};
   this._zones = [];
   //time is total days
   this._time=0;
 
-  this._heroes = {};
+  this._heroes = [];
   this._currentHero = {};
   this._currentEncounter = [];
+}
+hexPlaneMap.prototype.mapDimensions = function () {
+  var width =document.getElementById('hexPlane').offsetWidth*.95,
+    height = document.getElementById('hexPlane').offsetHeight*.95;
+
+  return {width:width,height:height};
+}
+hexPlaneMap.prototype.center = function () {
+  var D = this.mapDimensions();
+  return [D.width/2,D.height/2];
 }
 hexPlaneMap.prototype.noPopCell = function () {
   var cA = [];
@@ -251,13 +183,21 @@ hexPlaneMap.prototype.random = function (opts) {
   opts = typeof opts === "undefined" ? {} : opts;
   opts.display = typeof opts.display === "undefined" ? false : opts.display;
 
+  this._water = 0.3;
+  this._probTerrain = [1,1,1,2,2,2,2,3,3,3,4];
+
+  //variables for random map - min & max bound ponts
+  //bias is the most likely value, influence is between 0 & 1 and refelcts how strong bias will be
+  this._nCell = {min: 900, max: 2700, bias: 1800, influence: 1};
+
+  var map = this;
+
   this.name = this.RNG.rndName();
   if(opts.display){
     map.displaySetup();
   }
 
-  var n = Math.floor(this.RNG.RNDBias(this._min, this._max, this._bias, this._influence));
-  this._rndC = n;
+  var n = Math.floor(this.RNG.RNDBias(this._nCell.min, this._nCell.max, this._nCell.bias, this._nCell.influence));
 
   if(this._useZones) {
     var i=0, c=0;
@@ -276,284 +216,9 @@ hexPlaneMap.prototype.random = function (opts) {
     this.makeClimate(opts.display);
   }
 
-}
-hexPlaneMap.prototype.makeArtifact = function (card) {
-  card = typeof card === "undefined" ? newCard(this.RNG) : card;
-  var uid = makeUID(6,this.RNG);
-  var artifact = {
-    uid: uid,
-    rarity:card.rarity,
-    power:card.power,
-    tags:this.colorTags(card)
-  }
-  this._artifacts[uid]=artifact;
-  return artifact;
-}
-hexPlaneMap.prototype.colorTags = function (card) {
-  var tags = [];
-  var T = {
-    white:["Light","Healing","Defense","Protection","Law","Peace","Community","Equality"],
-    green:["Water","Air","Ice","Illusion","Divination","Logic","Knowledge","Trickery","Control"],
-    red:["Life","Nature","Forests","Beasts","Transmutation","Strenth","Growth","Regeneration"],
-    yellow:["Fire","Earth","Storms","Conjuration","Evocation","War","Fury","Chaos","Creativity"],
-    black:["Darkness","Death","Illness","Necromancy","Corruption","Destruction","Domination","Greed"],
-    gray:["Artifice","Machines","Technology","Golems"]
-  }
-
-  //push a color tag for every color
-  for (var i = 0; i < card.colors.length; i++) {
-    tags.push(T[card.colors[i]].random(map.RNG));
-  }
-  //if the size is greater than the number of colors push more tags
-  var max = Math.floor(card.power/3);
-  if(max>card.colors.length) {
-    var l = max-card.colors.length, nt="";
-    for (var i = 0; i < l; i++) {
-      //random color random tag
-      tags.push(T[card.colors.random(map.RNG)].random(map.RNG));
-    }
-  }
-  return tags;
-}
-hexPlaneMap.prototype.makeAssets = function (cell,aggro) {
-  var map=this, cid = cell.x+","+cell.y, N = this.neighboors(cid), armyn = cell.pop.assets.count("Army");
-
-  //Determine if the cell is next to water or is water itself.
-  var water = false;
-  for (var i = 0; i < N.length; i++) {
-    if(N[i].ncell.terrain == 0) {
-      water = true;
-    }
-  }
-  if(cell.terrain == 0) {
-    water = true;
-  }
-
-  var basic = ["Barracks","Church","Court","Market","Industry","School"];
-  if(water) {
-    basic.push("Harbor");
-  }
-
-  if(armyn < aggro+1) {
-    basic = basic.concat(["Army","Army"]);
-  }
-
-  var special = ["Foundry","Fortified","Weaponsmiths","Armorsmiths","Lab","Militia","Tower","Monastery","Library","Demigod"];
-  if(water) {
-    special.push("Shipyard");
-  }
-
-  var colors= []
-  if(typeof this._people[cid] !== "undefined"){
-    colors = this._people[cid].colors;
-  }
-  else {
-    colors = this.empirePopColors(cell.empire);
-  }
-
-  if(typeof cell.site !== "undefined"){
-    colors = colors.concat(cell.site.colors);
-  }
-  if(typeof cell.ruin !== "undefined"){
-    colors = colors.concat(cell.ruin.colors);
-  }
-
-  var colorTag= map.colorTags({cmc:1,colors:colors}).random(map.RNG);
-
-  var select = [basic.random(map.RNG),basic.random(map.RNG),basic.random(map.RNG),basic.random(map.RNG),special.random(map.RNG),colorTag];
-  select = select.random(map.RNG);
-
-  if(cell.pop.assets.count(select)<2){
-    cell.pop.assets.push(select);
-  }
-  else {
-    if(this.RNG.random<0.15) {
-      cell.pop.assets.push(select);
-    }
-    else {
-      this.makeAssets(cell,aggro);
-    }
-  }
-}
-hexPlaneMap.prototype.newResource = function (card,cid) {
-  var cell = this.cells[cid];
-  var R = {
-    "white":[],
-    "blue":[],
-    "green":[],
-    "red":[],
-    "black":[],
-    "gray":[]
-  }
-}
-hexPlaneMap.prototype.newSite = function (card,cell) {
-  var tags = [];
-
-  var T = {
-    white:["Butte","Grassland","Orchard"],
-    black:["River","Waterfalls","Geyser","Lake","Cenote"],
-    green:["Forest"],
-    red:["Mountain","Volcano","Mesa","Hoodoos","Canyon","Caves"],
-    yellow:["Swamp","Badlands","Bog"]
-  }
-  T.gray = T.white.concat(T.blue,T.green,T.red,T.black);
-
-  tags.push(T[card.colors.random(this.RNG)].random(this.RNG));
-
-  if(card.tags.contains("creature")) {
-    nature = ["Beasts","Bandits","Recluse"];
-    tags.push(nature.random(this.RNG));
-  }
-
-  if(card.tags.contains("land")) {
-    tags.push("Resource");
-    this.cells[cell].tags.push("Resource");
-  }
-
-  if(card.tags.contains("power")) {
-    tags.push("Power");
-  }
-
-  //get element/nature tags based upon color
-  tags = tags.concat(this.colorTags(card));
-  //make sure everything is unique
-  tags = tags.unique();
-
-  var site = {
-    size:card.power,
-    rarity:card.rarity,
-    colors:card.colors,
-    tags:tags,
-  };
-
-  //artifact chance
-  if(this.RNG.random()<0.02) {
-    site.artifact=[this.makeArtifact().uid];
-    this.cells[cell].tags.push("Artifact");
-  }
-
-  //if there is black there is doom
-  if(this.RNG.random()<0.15) {
-    this.makeDoom(cell,"site");
-  }
-
-  this.cells[cell].site = site;
-}
-hexPlaneMap.prototype.newRuin = function (card,cell) {
-  var tags = [], nature=[];
-  var rarePlace = ["City","Palace","Library","Fortress","Temple","School","Tower","Tomb","Prison","Mine"];
-  var places = ["City","City",rarePlace.random(this.RNG)];
-  tags.push(places.random(this.RNG));
-
-  if(card.tags.contains("artifact")) {
-    nature = ["Traps","Traps","Traps","Golems"];
-    tags.push(nature.random(this.RNG));
-  }
-
-  if(card.tags.contains("creature")) {
-    nature = ["Remnants","Remnants","Beasts","Bandits","Villain"];
-    tags.push(nature.random(this.RNG));
-  }
-
-  if(card.tags.contains("power")) {
-    nature = ["Temple","School","Foundry","Lab","Wonder","Wonder","Wonder","Tower","Monastery","Library","Wonder","Wonder"];
-    tags.push(nature.random(this.RNG));
-  }
-
-  if(card.tags.contains("land") || tags.contains("Mine")) {
-    this.cells[cell].tags.push("Resource");
-  }
-
-  if(card.tags.contains("superhero")) {
-    tags.push("Superhero");
-    nature = ["","","","","Tomb","Prison","Bound","Recluse"];
-    nature = nature.random(this.RNG);
-    if(nature.length>0) {
-      tags.push(nature)
-    }
-  }
-
-  if(card.tags.contains("legendary")) {
-    tags.push("Legendary");
-  }
-
-  //get element/nature tags based upon color
-  tags = tags.concat(this.colorTags(card));
-  //make sure everything is unique
-  tags = tags.unique();
-
-  //All ruins get a race
-  var water = this.cells[cell].terrain == 0 ? true : false;
-  var race = mapRaces(card.rarity,this.RNG,water);
-  var ruin = {
-      rarity:card.rarity,
-      tags:tags,
-      race: race,
-      colors:card.colors,
-      size:card.power
-  };
-
-  //all ruins have an artifact
-  ruin.artifact=[this.makeArtifact(card).uid];
-  this.cells[cell].tags.push("Artifact");
-
-  //if there is black there is doom
-  if(this.RNG.random()<0.15) {
-    this.makeDoom(cell,"ruin");
-  }
-
-  this.cells[cell].ruin = ruin;
-}
-hexPlaneMap.prototype.assets = function () {
-  var map=this, max = [0,2,4,6,8], n=0, pop={}, mpop={}, empire={}, aggro = -8, tags=[];
-  //cycle through the cells
-  for (var x in this.cells){
-    //if there is a pop they have assets
-    if(typeof this.cells[x].pop !== "undefined"){
-      pop=this.cells[x].pop;
-      //pull aggro for the empire or pop
-      if(objExists(typeof this.cells[x].empire)) {
-        aggro = this.empireAggro(this.cells[x].empire);
-      }
-      else {
-        aggro = this._people[x].aggro;
-      }
-      //max asset number is n
-      n = max[pop.size-1];
-      //include asset array
-      pop.assets = [];
-      if(typeof map._people[x] !== "undefined"){
-        if(map._people[x].tags.length>0) {
-          pop.assets = pop.assets.concat(map._people[x].tags);
-          n-= pop.assets.length;
-        }
-      }
-      //loop while n is not 0
-      while(n>0){
-        //lower max asset number
-        n--;
-        //make the asset
-        this.makeAssets(this.cells[x],aggro);
-      }
-    }
-  }
-}
-hexPlaneMap.prototype.troubles = function () {
-  var max = [2,3,3,4,7], n=0, i=0, tid=-1, pop={};
-  //cycle through the cells
-  for (var x in this.cells){
-    //if there is a pop there will be toruble
-    if(typeof this.cells[x].pop !== "undefined"){
-      pop = this.cells[x].pop;
-      //max trouble score is n
-      n = max[pop.size-1];
-      //this is the number of troubles in the hex
-      pop.troubles = n;
-    }
-  }
-}
-hexPlaneMap.prototype.center = function () {
-  return [this._width/2,this._height/2];
+  delete this._nCell;
+  delete this._probTerrain;
+  delete this._water;
 }
 hexPlaneMap.prototype.rawcells = function () {
   var cell = [], i=0;
@@ -870,7 +535,254 @@ hexPlaneMap.prototype.addZone = function () {
   this.zones.push(Z);
   return size;
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+hexPlaneMap.prototype.makeArtifact = function () {
+  var uid = makeUID(6,this.RNG),
+    card = CPX.card(this.uid+"#A"+uid);
+
+  var artifact = {
+    uid: uid,
+    rarity:card.rarity,
+    power:card.power
+  }
+  return artifact;
+}
+
+hexPlaneMap.prototype.makeAssets = function (cell,aggro) {
+  var map=this, cid = cell.x+","+cell.y, N = this.neighboors(cid), armyn = cell.pop.assets.count("Army");
+
+  //Determine if the cell is next to water or is water itself.
+  var water = false;
+  for (var i = 0; i < N.length; i++) {
+    if(N[i].ncell.terrain == 0) {
+      water = true;
+    }
+  }
+  if(cell.terrain == 0) {
+    water = true;
+  }
+
+  var basic = ["Barracks","Church","Court","Market","Industry","School"];
+  if(water) {
+    basic.push("Harbor");
+  }
+
+  if(armyn < aggro+1) {
+    basic = basic.concat(["Army","Army"]);
+  }
+
+  var special = ["Foundry","Fortified","Weaponsmiths","Armorsmiths","Lab","Militia","Tower","Monastery","Library","Demigod"];
+  if(water) {
+    special.push("Shipyard");
+  }
+
+  var colors= []
+  if(typeof this._people[cid] !== "undefined"){
+    colors = this._people[cid].colors;
+  }
+  else {
+    colors = this.empirePopColors(cell.empire);
+  }
+
+  if(typeof cell.site !== "undefined"){
+    colors = colors.concat(cell.site.colors);
+  }
+  if(typeof cell.ruin !== "undefined"){
+    colors = colors.concat(cell.ruin.colors);
+  }
+
+  var colorTag= ""
+
+  var select = [basic.random(map.RNG),basic.random(map.RNG),basic.random(map.RNG),basic.random(map.RNG),special.random(map.RNG),colorTag];
+  select = select.random(map.RNG);
+
+  if(cell.pop.assets.count(select)<2){
+    cell.pop.assets.push(select);
+  }
+  else {
+    if(this.RNG.random<0.15) {
+      cell.pop.assets.push(select);
+    }
+    else {
+      this.makeAssets(cell,aggro);
+    }
+  }
+}
+hexPlaneMap.prototype.newResource = function (card,cid) {
+  var cell = this.cells[cid];
+  var R = {
+    "white":[],
+    "blue":[],
+    "green":[],
+    "red":[],
+    "black":[],
+    "gray":[]
+  }
+}
+hexPlaneMap.prototype.newSite = function (cell) {
+  var tags = [], card = CPX.card(this.uid+"@"+cell+"_S");
+
+  var T = {
+    white:["Butte","Grassland","Orchard"],
+    black:["River","Waterfalls","Geyser","Lake","Cenote"],
+    green:["Forest"],
+    red:["Mountain","Volcano","Mesa","Hoodoos","Canyon","Caves"],
+    yellow:["Swamp","Badlands","Bog"]
+  }
+  T.gray = T.white.concat(T.blue,T.green,T.red,T.black);
+
+  tags.push(T[card.colors.random(this.RNG)].random(this.RNG));
+
+  if(card.tags.contains("creature")) {
+    nature = ["Beasts","Bandits","Recluse"];
+    tags.push(nature.random(this.RNG));
+  }
+
+  if(card.tags.contains("land")) {
+    tags.push("Resource");
+    this.cells[cell].tags.push("Resource");
+  }
+
+  if(card.tags.contains("power")) {
+    tags.push("Power");
+  }
+
+  //make sure everything is unique
+  tags = tags.unique();
+
+  var site = {
+    size:card.power,
+    rarity:card.rarity,
+    colors:card.colors,
+    tags:tags,
+  };
+
+  //artifact chance
+  if(this.RNG.random()<0.02) {
+    site.artifact=[this.makeArtifact().uid];
+    this.cells[cell].tags.push("Artifact");
+  }
+
+  //if there is black there is doom
+  if(this.RNG.random()<0.15) {
+    this.makeDoom(cell,"site");
+  }
+
+  this.cells[cell].site = site;
+}
+hexPlaneMap.prototype.newRuin = function (cell) {
+  var tags = [], nature=[], card = CPX.card(this.uid+"@"+cell+"_R");
+  var rarePlace = ["City","Palace","Library","Fortress","Temple","School","Tower","Tomb","Prison","Mine"];
+  var places = ["City","City",rarePlace.random(this.RNG)];
+  tags.push(places.random(this.RNG));
+
+  if(card.tags.contains("artifact")) {
+    nature = ["Traps","Traps","Traps","Golems"];
+    tags.push(nature.random(this.RNG));
+  }
+
+  if(card.tags.contains("creature")) {
+    nature = ["Remnants","Remnants","Beasts","Bandits","Villain"];
+    tags.push(nature.random(this.RNG));
+  }
+
+  if(card.tags.contains("power")) {
+    nature = ["Temple","School","Foundry","Lab","Wonder","Wonder","Wonder","Tower","Monastery","Library","Wonder","Wonder"];
+    tags.push(nature.random(this.RNG));
+  }
+
+  if(card.tags.contains("land") || tags.contains("Mine")) {
+    this.cells[cell].tags.push("Resource");
+  }
+
+  if(card.tags.contains("superhero")) {
+    tags.push("Superhero");
+    nature = ["","","","","Tomb","Prison","Bound","Recluse"];
+    nature = nature.random(this.RNG);
+    if(nature.length>0) {
+      tags.push(nature)
+    }
+  }
+
+  if(card.tags.contains("legendary")) {
+    tags.push("Legendary");
+  }
+
+  //make sure everything is unique
+  tags = tags.unique();
+
+  //All ruins get a race
+  var water = this.cells[cell].terrain == 0 ? true : false;
+  var race = mapRaces(card.rarity,this.RNG,water);
+  var ruin = {
+      rarity:card.rarity,
+      tags:tags,
+      race: race,
+      colors:card.colors,
+      size:card.power
+  };
+
+  //all ruins have an artifact
+  ruin.artifact=[this.makeArtifact().uid];
+  this.cells[cell].tags.push("Artifact");
+
+  //if there is black there is doom
+  if(this.RNG.random()<0.15) {
+    this.makeDoom(cell,"ruin");
+  }
+
+  this.cells[cell].ruin = ruin;
+}
+hexPlaneMap.prototype.assets = function () {
+  var map=this, max = [0,2,4,6,8], n=0, pop={}, mpop={}, empire={}, aggro = -8, tags=[];
+  //cycle through the cells
+  for (var x in this.cells){
+    //if there is a pop they have assets
+    if(typeof this.cells[x].pop !== "undefined"){
+      pop=this.cells[x].pop;
+      //pull aggro for the empire or pop
+      if(objExists(typeof this.cells[x].empire)) {
+        aggro = this.empireAggro(this.cells[x].empire);
+      }
+      else {
+        aggro = this._people[x].aggro;
+      }
+      //max asset number is n
+      n = max[pop.size-1];
+      //include asset array
+      pop.assets = [];
+      if(typeof map._people[x] !== "undefined"){
+        if(map._people[x].tags.length>0) {
+          pop.assets = pop.assets.concat(map._people[x].tags);
+          n-= pop.assets.length;
+        }
+      }
+      //loop while n is not 0
+      while(n>0){
+        //lower max asset number
+        n--;
+        //make the asset
+        this.makeAssets(this.cells[x],aggro);
+      }
+    }
+  }
+}
+hexPlaneMap.prototype.troubles = function () {
+  var max = [2,3,3,4,7], n=0, i=0, tid=-1, pop={};
+  //cycle through the cells
+  for (var x in this.cells){
+    //if there is a pop there will be toruble
+    if(typeof this.cells[x].pop !== "undefined"){
+      pop = this.cells[x].pop;
+      //max trouble score is n
+      n = max[pop.size-1];
+      //this is the number of troubles in the hex
+      pop.troubles = n;
+    }
+  }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //stats
@@ -882,8 +794,9 @@ hexPlaneMap.prototype.statTerrain = function () {
   return stat;
 }
 hexPlaneMap.prototype.statPop = function () {
-  var stat={};
+  var stat={}, array=[];
   for(var x in this._people){
+    array.push(this._people[x].race);
     if(objExists(stat[this._people[x].race])){
       stat[this._people[x].race]++;
     }
@@ -891,7 +804,7 @@ hexPlaneMap.prototype.statPop = function () {
       stat[this._people[x].race]=1;
     }
   }
-  return stat;
+  return {obj:stat,array:array};
 }
 hexPlaneMap.prototype.statEmpire = function () {
   var stat={};

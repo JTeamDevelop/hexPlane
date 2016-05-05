@@ -1,5 +1,88 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Display
+d3.select("#realmStart").on("click",function(){
+  var uid = $(".map").attr("id"), map = cpxActive.realms[uid];
+  if(!map._active){
+    map._active = true;
+    map._timer = setInterval(function(){ CPX.activeRealm(map.uid); }, 20000);
+    $(this).html("Stop");
+  }
+  else {
+    map._active = false;
+    clearInterval(map._timer);
+    $(this).html("Start");
+  }
+});
+d3.selectAll(".fileOptions").on("click",function(){
+  var id = $(this).attr("id");
+  if(id=="fNew"){
+    CPX.newRealm();
+  }
+  else if(id=="fLoad"){
+    if(cpxSavedList.realms.length==0){ return; }
+
+    $("#notify").removeClass("wide");
+    $("#notify").addClass("slim");
+
+    var html="<h3 class=center>Planes</h3>";
+    for (var i = 0; i < cpxSavedList.realms.length; i++) {
+      //make sure that the plane isn't active
+      if(!objExists(cpxActive.realms[cpxSavedList.realms[i].uid])){
+        //if it isn't active Display as an option to load
+        html+="<div class='realm center' data-uid='"+cpxSavedList.realms[i].uid+"'>"+cpxSavedList.realms[i].name+"</div>";
+      }
+    }
+    html += "<div class='buttons center'><button id=loadCancel >Cancel</button></div>";
+    html = "<div id=loadRealmsList>"+html+"</div>";
+    d3.select("#notify .content").html(html);
+    $("#notify").slideDown();
+
+    d3.select("#loadCancel").on("click",function(){
+      $("#notify").slideUp();
+      $("#notify .content").empty();
+    });
+    d3.selectAll("#loadRealmsList .realm").on("click",function(){
+      var seed = $(this).attr("data-uid");
+      $("#notify").slideUp();
+      $("#notify .content").empty();
+      CPX.dbLoad(seed);
+    });
+  }
+  else if(id=="fSave") {
+    CPX.dbSave();
+  }
+});
+
+CPX.displayRealm = function (rid) {
+  $("#logo").hide();
+  $("#time").empty();
+  $("#heroCurrent").empty();
+  $("#dInfo").empty();
+  $("#heroOptions").empty();
+
+  var map = cpxActive.realms[rid];
+  map.displaySetup();
+  map.addTime(0);
+  map.displayAllHex();
+  map.popDisplay();
+
+  for (var x in cpxActive.heroes){
+    if(cpxActive.heroes[x].realm == rid){
+      map.displayHeroToMap(x);
+    }
+  }
+
+  var panZoomHex = svgPanZoom('#'+map.uid);
+  $("#realmStart").css({"display":"inline-block"});
+}
+
+CPX.displayCurrentHeroInfo = function () {
+  var hero = cpxCurrentHero,
+    html = "<div class='center header'>Active Hero</div>";
+  d3.select("#heroCurrent").html(CPX.heroDisplay(hero));
+  $("#heroCurrent .hero").prepend(html);
+  $("#heroCurrent").slideDown();
+}
 
 hexPlaneMap.prototype.key = function () {
 
@@ -18,19 +101,21 @@ hexPlaneMap.prototype.key = function () {
       .html(title+tkey+ckey);
 }
 hexPlaneMap.prototype.displaySetup = function () {
-  var map = this;
+  var map = this, D= this.mapDimensions();
   var svg = d3.select("#hexPlane").append("svg")
-  	.attr("id","hexSVG")
+  	.attr("id",this.uid)
+    .attr("data-uid",this.uid)
     .classed({'map': true})
-    .attr("width", map._width)
-    .attr("height", map._height);
+    .attr("width", D.width)
+    .attr("height", D.height);
 
   var hex = svg.append("g").classed({'gHex': true});
 	var hexClimate = svg.append("g").classed({'gClimate': true});
-  var hexClimate = svg.append("g").classed({'gHeroes': true});
+  var hexHeroes = svg.append("g").classed({'gHeroes': true});
 
-  $("#title").append("<h1>"+this.name+"</h1>");
-  $("#hexStats").append("<div class=center id=seed><span id=seedN>"+this.uid+"</span><br><span class=title>Seed</span></div>");
+  d3.select("#title").html("<h1>"+this.name+"</h1>");
+  d3.select("#hexStats").html("<div class=center id=seed><span id=seedN>"+this.uid+"</span><br><span class=title>Seed</span></div>");
+  $("#fSave").show();
 
 	//add functionality to change views
 	d3.selectAll(".selView").on("click",function(){
@@ -82,14 +167,8 @@ hexPlaneMap.prototype.displayComplete = function (hid) {
     $("#dInfo").show();
   });
 }
-hexPlaneMap.prototype.displayCurrentHeroInfo = function (hid) {
-  var html = "<div class='center header'>Active Hero</div>";
-  d3.select("#heroCurrent").html(CPX.heroDisplay(this._heroes[hid]));
-  $("#heroCurrent .hero").prepend(html);
-  $("#heroCurrent").slideDown();
-}
 hexPlaneMap.prototype.displayHeroMove = function (hid) {
-  var map = this, hero = this._heroes[hid],
+  var map = this, hero = cpxActive.heroes[hid],
     cell = this.cells[hero.location],
     hdata = [cell.x,cell.y],
     center = cellCenter(map,hdata);
@@ -99,7 +178,7 @@ hexPlaneMap.prototype.displayHeroMove = function (hid) {
     .attr("y", center[1]-4.5);
 }
 hexPlaneMap.prototype.displayHeroToMap = function (hid) {
-  var map = this, hero = this._heroes[hid],
+  var map = this, hero = cpxActive.heroes[hid],
     cell = this.cells[hero.location],
     hdata = [cell.x,cell.y],
     center = cellCenter(map,hdata);
@@ -119,18 +198,11 @@ hexPlaneMap.prototype.displayHeroToMap = function (hid) {
       console.log(chero);
     });
 
-    //cellWithinX
-
-    $('.ttipHero').remove();
-    $('.svgHero').tooltipsy({
-  		content: function(cell) {
-  			var data = cell[0].__data__.hero;
-  			var html="<strong>"+data.name+"</strong>";
-  			return html;
-  		},
-      className: 'tooltipsy ttipHero'
-    });
-
+}
+hexPlaneMap.prototype.displayAllHex = function () {
+  for (var x in this.cells){
+    this.displayHex(x);
+  }
 }
 hexPlaneMap.prototype.displayHex = function (cid) {
   var map = this, cell = this.cells[cid], cdata= [[cell.x,cell.y]];
@@ -186,7 +258,7 @@ hexPlaneMap.prototype.makePoints = function (groupclass,cellclass,data,size,colo
     });
 }
 hexPlaneMap.prototype.displayCellInfo = function (cell) {
-  var data = this.cells[cell];
+  var map = this, data = this.cells[cell];
   var html="<div class=square style='background:"+TERRAIN[data.terrain].color+"'></div>"
   html+="<strong>"+TERRAIN[data.terrain].name+" ("+CLIMATE[data.climate].name+")</strong>";
 
@@ -243,18 +315,5 @@ hexPlaneMap.prototype.popDisplay = function () {
 
     return html;
   }
-
-	$('path.hex').tooltipsy({
-		content: function(cell){
-      return ttData(cell[0].__data__.data);
-    },
-    className: 'tooltipsy ttipCell'
-	});
-  $('.point').tooltipsy({
-		content: function(cell){
-      return ttData(map.cells[cell[0].__data__[0]+","+cell[0].__data__[1]]);
-    },
-    className: 'tooltipsy ttipCell'
-	});
 
 }

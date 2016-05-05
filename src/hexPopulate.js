@@ -23,15 +23,15 @@ mapRaces = function (rarity,cRNG,water) {
   var waterRaces = {
     c:["Merman","Sea-elf","Sahaugain"],
     u:["Octopus-people","Shark-people","Eel-people","Crab-people","Naga"],
-    r:["Dragon","Dragon","Elementals","Elementals","Giant","Golem"],
+    r:["Dragon","Dragon","Elemental","Elemental","Giant","Golem"],
     m:[]
   }
 
   var races = {
     c:["Human",demi.random(cRNG)],
     u:[demi.random(cRNG),monstrous.random(),hybrid(),profs(["Human",demi.random(cRNG)])],
-    r:["Dragon","Dragon","Elementals","Elementals","Giant","Golem","Treant",profs([demi.random(cRNG),monstrous.random(cRNG),hybrid(cRNG)]),profs([demi.random(cRNG),monstrous.random(cRNG),hybrid(cRNG)])],
-    m:["Dragon Clan","Elemental Conflux","Demigods"]
+    r:["Dragon","Dragon","Elemental","Elemental","Giant","Golem","Treant",profs([demi.random(cRNG),monstrous.random(cRNG),hybrid(cRNG)]),profs([demi.random(cRNG),monstrous.random(cRNG),hybrid(cRNG)])],
+    m:["Dragon Clan","Elemental Conflux","Demigod"]
   }
   if(water){
     races.c=waterRaces.c;
@@ -56,10 +56,10 @@ mapRaces = function (rarity,cRNG,water) {
 
 //Actually populates map - creates cultures, sites and ruins based upon the number of hexes
 hexPlaneMap.prototype.populate = function () {
-	var map=this, cA=this.cellArray(), cPop=[], ruins=[], cell="", r="", card ={}, track={r:0,s:0};
+	var map=this, cA=this.cellArray(), nCell = cA.length, cPop=[], ruins=[], cell="", r="", card ={}, track={r:0,s:0};
 
   //Load population and sites
-	var n = Math.round(this._rndC/10);
+	var n = Math.round(nCell/10);
   while(cPop.length <n)  {
     //random cell
     cell = cA.random(this.RNG);
@@ -67,76 +67,46 @@ hexPlaneMap.prototype.populate = function () {
       continue;
     }
     cPop.push(cell);
-    //pull a random card
-    card = newCard(this.RNG);
-    //if it isn't a land
-    if(card.rarity!="l"){
-      //test if the card is a creature
-      if(card.tags.contains("creature")) {
-        if(map.RNG.random() <0.8) {
-          this.newRace(card,cell);
-          track.r++;
-        }
-        else {
-          this.newSite(card,cell);
-          track.s++;
-        }
-      }
-      else {
-        //otherwise 50/50 chance of a race
-        if(map.RNG.TrueFalse()){
-          this.newRace(card,cell);
-          track.r++;
-        }
-        else {
-          this.newSite(card,cell);
-          track.s++;
-        }
-      }
+    //either a new race or a ne site
+    if(map.RNG.random() <0.6){
+      this.newPeople(cell);
+      track.r++;
     }
     else {
-      this.newSite(card,cell);
+      this.newSite(cell);
       track.s++;
     }
   }
   console.log(track);
 
   //Ruins
-  var n = Math.round(this._rndC/100);
+  var n = Math.round(nCell/100);
   while (ruins.length < n){
     cell = cA.random(this.RNG);
     if(ruins.indexOf(cell) == -1){
       ruins.push(cell);
-      //load a random card
-      card = newCard(this.RNG);
-      this.newRuin(card,cell);
+      this.newRuin(cell);
     }
   }
 
   this.troubles();
-//  this.assets();
-  this.popDisplay();
   delete this._set;
+  delete this.RNG;
 }
 ///////////////////////////////////////////////////////////////////////////////////
 //Adds races
-hexPlaneMap.prototype.newRace = function (card,cid) {
-  cid = typeof cid === "undefined" ? this.noPopCell() : cid;
-  var map = this, cell = map.cells[cid];
-  var water = cell.terrain == 0 ? true : false;
-  var race = mapRaces(card.rarity,this.RNG,water);
+CPX.people = function (seed,water) {
+  var cRNG = new RNG(seed),
+  card = CPX.card(seed),
+  race = mapRaces(card.rarity,cRNG,water);
 
   var tags=[];
   if(card.tags.contains("power")) {
-    tags.push(this.colorTags(card).random(this.RNG));
+    tags.push(card.aspects.random(cRNG));
   }
 
   if(card.tags.contains("legendary") || card.tags.contains("superhero")) {
     tags.push("Superhero");
-  }
-
-  if(card.tags.contains("land")) {
-    this.cells[cid].tags.push("Resource");
   }
 
   var stats = [[1,1,0,0,-1,-1],[2,1,0,0,-1,-2]];
@@ -144,28 +114,37 @@ hexPlaneMap.prototype.newRace = function (card,cid) {
   var pop = {
     race: race,
     rarity:card.rarity,
-    aggro:map.RNG.FateRoll(),
+    aggro:cRNG.FateRoll(),
     tags:tags,
     colors:card.colors,
     size:card.power,
-    name:map.RNG.rndName(),
-    stats:map.RNG.shuffleAr(stats.random(map.RNG)),
-    hexcolor:map.RNG.rndColor()
+    name:cRNG.rndName(),
+    stats:cRNG.shuffleAr(stats.random(cRNG)),
+    hexcolor:cRNG.rndColor()
   };
+
+  return pop;
+}
+
+hexPlaneMap.prototype.newPeople = function (cid) {
+  cid = typeof cid === "undefined" ? this.noPopCell() : cid;
+  var map = this, cell = map.cells[cid],
+    water = cell.terrain == 0 ? true : false,
+    card = CPX.card(this.uid+"@"+cid+"_P"),
+    pop = CPX.people(this.uid+"@"+cid+"_P",water);
+
+  if(card.tags.contains("land")) {
+    cell.tags.push("Resource");
+  }
 
   //artifact chance
   if(this.RNG.random()<0.02) {
-    pop.artifact=[this.makeArtifact().uid];
     cell.tags.push("Artifact");
   }
 
-  //if there is black there is doom
+  //doom chance
   if(this.RNG.random()<0.15) {
-    if(pop.aggro==0) {
-      pop.aggro++;
-    }
-    pop.aggro=Math.abs(pop.aggro);
-    this.makeDoom(cid,pop.name);
+    cell.tags.push("Doom");
   }
 
   var empire = {}, eid = "", ap = [3,3,3,3,3], ns=-1, eid="";
