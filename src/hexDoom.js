@@ -92,7 +92,7 @@ CPX.foe = function (map,cid,hid) {
     rarity = cRNG.rarity(),
     cell = map.cells[cid],
     water = cell.terrain == 0 ? true : false;
-    hero = map._heroes[hid],
+    hero = cpxActive.heroes[hid],
     hL = hero.levels.length,
     T = cRNG.rndInt(1,4)-cRNG.rndInt(1,4)+hL,
     people = {}, name="", foes=[],
@@ -107,7 +107,7 @@ CPX.foe = function (map,cid,hid) {
   //Bandit, Thug, Goon, Marauder, Pirate, Raider, Merc, Cutthroat, Ruffian, Bruiser, Tough
   //Warrior, Champion, Fighter, Soldier, Trooper, Knight, Legionnaire, Barbarian, Berserker,
   var banditNames = {
-    Minion:["Bandit", "Thug","Warrior", "Goon", "Marauder", "Pirate", "Raider", "Merc", "Cutthroat", "Ruffian", "Bruiser"],
+    Minion:["Bandit", "Thug","Warrior", "Goon", "Marauder", "Pirate", "Raider", "Mercinary", "Cutthroat", "Ruffian", "Bruiser"],
     Brute: ["Barbarian", "Berserker","Brute"],
     Tank:["Soldier", "Trooper", "Knight", "Legionnaire"],
     Sorcerer:["Sorcerer","Conjurer","Necromancer","Shaman","Wizard","Warlock"]
@@ -213,19 +213,18 @@ CPX.foe = function (map,cid,hid) {
 
   nature = nature.random(cRNG);
 
-  if(objExists(cell.pop)){
-    if(nature == "bandit"){
+  if(nature == "bandit"){
+    var water = cell.terrain == 0 ? true : false;
+    people.race = mapRaces(cRNG.rarity(),cRNG,water);
+
+    if(objExists(cell.pop)){
       if(cRNG.TrueFalse()){
         people = map.empirePeople(cell.pop.eid).random(cRNG);
       }
-      else {
-        var water = cell.terrain == 0 ? true : false;
-        people.race = mapRaces(cRNG.rarity(),cRNG,water);
-      }
     }
-    else if (nature == "doom") {
-      people.race = DOOMS.random(cRNG);
-    }
+  }
+  else if (nature == "doom") {
+    people.race = DOOMS.random(cRNG);
   }
 
   if(nature == "bandit" || nature == "doom") {
@@ -390,8 +389,34 @@ CPX.beast = function (water) {
   }
 
 }
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+CPX.doomInitial = function (rid,cRNG) {
+  var map = cpxActive.realms[rid],
+    max = [2,3,3,4,5], n=0, i=0, tid=-1, pop={}, doom = {}, dRNG={};
+  //cycle through the cells
+  for (var x in map.cells){
+    //if there is a pop there will be trouble
+    if(objExists(map.cells[x].pop)){
+      pop = map.cells[x].pop;
+      //max trouble score is n
+      n = max[Math.floor(pop.size-1)];
+      //this is the number of troubles in the hex
+      map.cells[x].pop.troubles = n;
+    }
 
+    //set the doom - chance is only 5% per cell
+    if(cRNG.random()<0.035){
+      dRNG= new RNG(rid+"@"+x+"_D");
+      doom = {c:1,u:2,r:cRNG.rndInt(3,4),m:5};
+      map.cells[x].doom= doom[dRNG.rarity()];
+      map._doom[x] = {cells:[x]}
+    }
+  }
+}
 
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 //doom function, gives the current doom level d, and the nature of the doom - what is its goal
 hexPlaneMap.prototype.makeDoom = function (cell,location) {
   this.cells[cell].tags.push("Doom");

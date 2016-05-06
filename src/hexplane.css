@@ -1,13 +1,6 @@
 h1, h2, h3 {
   margin: 0;
 }
-.dropdown-content {
-  display: none;
-  position: absolute;
-}
-.dropdown:hover .dropdown-content {
-  display: block;
-}
 #logo{
   position: absolute;
   top: 50%;
@@ -18,40 +11,6 @@ h1, h2, h3 {
   margin-left: 0.5em;
   padding:0.5em;
 }
-#menu {
-  position:absolute;
-  top:0;
-  right: 0;
-  z-index:5;
-  background-color: lightGray;
-}
-#menu .menu{
-  display: inline-block;
-  padding: 10px;
-}
-#menu .menu:hover{
-  background-color: gray;
-}
-#menu a {
-  text-decoration:none;
-  color: black;
-}
-#menu ul {
-  list-style-type:none;
-  margin: 0;
-}
-#menu .dropdown-content {
-  right:0;
-}
-#menu .dropdown-content li {
-  text-align: center;
-  background-color: lightGray;
-  padding: 10px;
-}
-#menu .dropdown-content li:hover {
-  background-color: gray;
-}
-
 #hexPlane {
   position:fixed;
   top:15px;
@@ -60,7 +19,6 @@ h1, h2, h3 {
   right:1%;
   z-index:-1;
 }
-
 #right {
   position: fixed;
   right: 0;
@@ -73,10 +31,6 @@ h1, h2, h3 {
   top: 45px;
   max-width:250px;
 }
-
-#heroCurrent {
-  display: none;
-}
 #dInfo {
   display: none;
   margin: 3px;
@@ -84,14 +38,186 @@ h1, h2, h3 {
   border: 1px solid black;
   border-radius: 5px;
 }
-#heroOptions button{
+#timeOptions{
+  display: none;
+}
+#timeOptions button{
   width: 150px;
 }
+.tooltipsy
+{
+    padding: 10px;
+    max-width: 200px;
+    color: #303030;
+    background-color: #f5f5b5;
+    border: 1px solid #deca7e;
+}
+#menu #realmStart {
+  display: none;
+}
+.realm {
+  margin:0.2em;
+  padding:0.2em;
+  border: 1px solid black;
+  cursor:pointer;
+}
+.realm:hover {
+  background-color: rgba(155,255,205,0.75);
+}
+.gClimate {
+  opacity: 0;
+}
+.equipped {
+  font-style: italic;
+}
+.title {
+  font-weight: bold;
+}
+.center {
+  text-align: center;
+}
+.header {
+  font-weight:bold;
+}
+.column {
+  display:inline-block;
+  width:50px;
+  margin:0.2em;
+  padding: 0.1em;
+}
+.selected {
+  fill: yellow;
+}
+.rightAlign {
+  position: absolute;
+  right:10%;
+}
+.inline {
+  display:inline-block;
+}
+.threeColumn {
+  width: 32%;
+}
+.square {
+  width: 10px;
+	height: 10px;
+	margin-right: 5px;
+	display: inline-block;
+}
+/* ==========================================================================
+Menu
+========================================================================== */
+   .dropdown-content {
+     display: none;
+     position: absolute;
+   }
+   .dropdown:hover .dropdown-content {
+     display: block;
+   }
+   #menu {
+     position:absolute;
+     top:0;
+     right: 0;
+     z-index:5;
+     background-color: lightGray;
+   }
+   #menu .menu{
+     cursor: pointer;
+     position: relative;
+     display: inline-block;
+     padding: 10px;
+   }
+   #menu .menu:hover{
+     background-color: gray;
+   }
+   #menu a {
+     text-decoration:none;
+     color: black;
+   }
+   #menu ul {
+     list-style-type:none;
+     margin: 0;
+   }
+   #menu .dropdown-content {
+     right:0;
+   }
+   #menu .dropdown-content li {
+     text-align: center;
+     background-color: lightGray;
+     padding: 10px;
+   }
+   #menu .dropdown-content li:hover {
+     background-color: gray;
+   }
+#fSave {
+  display: none;
+}
+.selView {
+ cursor: pointer;
+}
+.selView.selected{
+ text-decoration: underline;
+ color: green;
+}
+/* ==========================================================================
+Active Realms
+========================================================================== */
+.active {
+  display: none;
+  width: 175px;
+  margin-right: 0.25em;
+  margin-bottom: 0.5em;
+  border: 1px solid black;
+  background-color: rgba(95,158,160,0.1);
+}
+#activeRealms .realm {
+  margin:0;
+  padding:0 1em;
+  border: 0;
+}
+#activeRealms .realm:nth-child(even) {
+  background-color: rgba(0,255,255,0.1);
+}
+#activeRealms .realm:nth-child(odd) {
+  background-color: rgba(95,158,160,0.1);
+}
+#activeRealms .realm:hover {
+  background-color: rgba(155,255,205,0.75);
+}
+#activeHeroes .hero {
+  margin:0em;
+  padding:0.5em;
+  border: 0;
+  cursor: pointer;
+}
+#activeHeroes .content{
+  padding:0;
+}
+#addHero {
+  display: none;
+}
 
+/* ==========================================================================
+Keys
+========================================================================== */
 #hexStats {
   border: 1px solid black;
   display: none;
   padding: 0.5em;
+}
+#hexKey {
+  display: none;
+  margin: auto;
+  text-align: center;
+  width:150px;
+  margin-top: 1em;
+}
+#keyClimate {
+  display: none;
+}
+#TCKey {
+  padding: .5em;
+  border: 1px solid black;
 }
 #seedN {
   background-color: lightblue;
@@ -103,47 +229,42 @@ h1, h2, h3 {
 #seed .title {
   font-size:0.8em;
 }
-.title {
-  font-weight: bold;
-}
 
-#hexKey {
-  display: none;
-  margin: auto;
-  text-align: center;
-  width:150px;
-  margin-top: 1em;
-}
+/* ==========================================================================
+Notify window
+========================================================================== */
+   #notify{
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     padding: 1em;
+     display: none;
+     background-color: rgba(255,255,255,0.75);
+     border: 1px solid black;
+     border-radius: 10px;
+   }
+   #notify.wide {
+     width: 800px;
+   }
+   #notify.slim {
+     width: 400px;
+   }
 
-#notify{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 1em;
-  display: none;
-  background-color: rgba(255,255,255,0.75);
-  border: 1px solid black;
-  border-radius: 10px;
-}
-#notify.wide {
-  width: 800px;
-}
-#notify.slim {
-  width: 400px;
-}
+   .content {
+     padding: 1em;
+     overflow-y: auto;
+   }
+   #notify.wide .content {
+     max-height: 600px;
+   }
+   #notify.slim .content {
+     max-height: 300px;
+   }
 
-.content {
-  padding: 1em;
-  overflow-y: auto;
-}
-#notify.wide .content {
-  max-height: 600px;
-}
-#notify.slim .content {
-  max-height: 300px;
-}
-
+/* ==========================================================================
+Hero display
+========================================================================== */
 .hero {
   margin: 3px;
   padding: 0.5em;
@@ -160,14 +281,17 @@ h1, h2, h3 {
   margin: 0;
   padding-left: 7px;
 }
+.ability .title {
+  font-size:0.8em;
+}
 #notify .hero:hover {
   background-color: rgba(155,255,205,0.75);
 }
 #notify .ability {
   margin:0 1em;
 }
-.ability .title {
-  font-size:0.8em;
+#heroCurrent {
+  display: none;
 }
 #heroCurrent .ability{
   margin:0 0.3em;
@@ -175,66 +299,12 @@ h1, h2, h3 {
 #heroCurrent .ability .title{
   font-size:0.65em;
 }
-
-.gClimate {
-  opacity: 0;
-}
-.equipped {
-  font-style: italic;
-}
-
-#TCKey {
-  padding: .5em;
-  border: 1px solid black;
-}
-
-#keyClimate {
-  display: none;
-}
-
-
-.selView {
-  cursor: pointer;
-}
-.selView.selected{
-  text-decoration: underline;
-  color: green;
-}
-
-.center {
-  text-align: center;
-}
-.header {
-  font-weight:bold;
-}
-.selected {
-  fill: yellow;
-}
-.inline {
-  display:inline-block;
-}
-.threeColumn {
-  width: 32%;
-}
-
-.tooltipsy
-{
-    padding: 10px;
-    max-width: 200px;
-    color: #303030;
-    background-color: #f5f5b5;
-    border: 1px solid #deca7e;
-}
-
-.square {
-  	width: 10px;
-	height: 10px;
-	margin-right: 5px;
-	display: inline-block;
+#heroOptions button{
+  width: 150px;
 }
 /* ==========================================================================
-   Attack display
-   ========================================================================== */
+Attack display
+========================================================================== */
 .foe {
   margin-bottom:0.5em;
   padding:0.25em;
