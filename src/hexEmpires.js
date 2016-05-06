@@ -15,10 +15,10 @@ hexPlaneMap.prototype.empireRandomResource = function (eid) {
 hexPlaneMap.prototype.empireOpenN = function (empire) {
   var nids = [], nC=[];
   for (var i = 0; i < empire.cells.length; i++) {
-    nC = this.neighboors(empire.cells[i]).n;
+    nC = this.cellNeighboors(empire.cells[i]).n;
     for (var j = 0; j < nC.length; j++) {
-      if(!objExists(nC[j].ncell.pop)) {
-        nids.push(nC[j].id);
+      if(!objExists(this.cells[nC[j]].pop)) {
+        nids.push(nC[j]);
       }
     }
   }
@@ -45,7 +45,7 @@ hexPlaneMap.prototype.empireBounds = function (empire) {
   }
   return {min:min,max:max};
 }
-hexPlaneMap.prototype.empireExpand = function (eid) {
+hexPlaneMap.prototype.empireExpand = function (eid,cRNG) {
   var map = this, empire = this._empires[eid];
 
   //absorb the neighboors
@@ -71,19 +71,19 @@ hexPlaneMap.prototype.empireExpand = function (eid) {
   }
 
   function powerUp () {
-    var cell = map.cells[empire.cells.random(map.RNG)];
+    var cell = map.cells[empire.cells.random(cRNG)];
     if(cell.pop.size <2){
       cell.pop.size++;
       empire.power--;
     }
     else if (cell.pop.size==3) {
-      if(map.RNG.random()<0.25){
+      if(cRNG.random()<0.25){
         cell.pop.size++;
         empire.power--;
       }
     }
-    else if (cell.pop==4) {
-      if(map.RNG.random()<0.05){
+    else if (cell.pop.size==4) {
+      if(cRNG.random()<0.05){
         cell.pop.size++;
         empire.power--;
       }
@@ -94,8 +94,8 @@ hexPlaneMap.prototype.empireExpand = function (eid) {
   while (empire.power > 0.5) {
     if(!absorb()){
       //absorb new cell
-      if(map.RNG.random()<0.75) {
-        cid = map.empireOpenN(empire).random(map.RNG);
+      if(cRNG.random()<0.75) {
+        cid = map.empireOpenN(empire).random(cRNG);
         if(cid != null) {
           cell = map.cells[cid];
           cell.pop = {size:1,eid:eid};

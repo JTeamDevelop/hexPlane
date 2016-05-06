@@ -1,39 +1,45 @@
 EQUIPMENT = {
-	"Dagger":{type:"weapon",range:["hand","thrown"],tags:[],weight:1,dmg:0},
-	"Light sword":{type:"weapon",range:["close"],tags:["precise"],weight:1,dmg:0},
-	"Short sword":{type:"weapon",range:["close"],tags:[],weight:1,dmg:0},
+//////////////Heavy - 2H //////////////////////////////
+	"Battle axe":{type:"weapon",range:["close"],tags:["2-h"],weight:2,dmg:1},
+	"Maul":{type:"weapon",range:["close"],tags:["2-h"],weight:2,dmg:1},
+	"Greatsword":{type:"weapon",range:["close"],tags:["2-h"],weight:2,dmg:1},
+//////////////One handed //////////////////////////////
 	"Sword":{type:"weapon",range:["close"],tags:[],weight:2,dmg:1},
-	"Two-handed sword":{type:"weapon",range:["close"],tags:["2-h"],weight:2,dmg:1},
-	"Club":{type:"weapon",range:["close"],tags:[],weight:1,dmg:0},
-	"Staff":{type:"weapon",range:["close"],tags:["2-h"],weight:1,dmg:0},
 	"Spear":{type:"weapon",range:["reach","thrown"],tags:[],weight:1,dmg:0},
 	"Mace":{type:"weapon",range:["close"],tags:[],weight:1,dmg:0},
 	"Warhammer":{type:"weapon",range:["close"],tags:[],weight:1,dmg:0},
-	"Maul":{type:"weapon",range:["close"],tags:[],weight:2,dmg:1},
-	"Hatchet":{type:"weapon",range:["close","thrown"],tags:[],weight:1,dmg:0},
 	"Axe":{type:"weapon",range:["close"],tags:[],weight:1,dmg:0},
-	"Battle axe":{type:"weapon",range:["close"],tags:[],weight:2,dmg:1},
+//////////////Light weapon //////////////////////////////
+	"Rapier":{type:"weapon",range:["close"],tags:["precise"],weight:1,dmg:0},
+	"Short sword":{type:"weapon",range:["close"],tags:["precise"],weight:1,dmg:0},
+	"Hatchet":{type:"weapon",range:["close","thrown"],tags:["precise"],weight:1,dmg:0},
+	"Staff":{type:"weapon",range:["close"],tags:["precise"],weight:1,dmg:0},
+//////////////Small weapon //////////////////////////////
+	"Dagger":{type:"weapon",range:["hand","thrown"],tags:["precise"],weight:1,dmg:0},
+	"Club":{type:"weapon",range:["close"],tags:["precise"],weight:1,dmg:0},
+//////////////Ranged //////////////////////////////
 	"Crossbow":{type:"weapon",range:["near"],tags:["bolt","reload"],weight:3,dmg:1},
 	"Bow":{type:"weapon",range:["near","far"],tags:["arrow"],weight:1,dmg:1},
-//////////////////////////////////////////////////////////////////////////////////////////
+	"Sling":{type:"weapon",range:["near","far"],tags:["slingstone"],weight:1,dmg:1},
+//////////////Armor /////////////////////////////////////////////////
 	"Light armor":{type:"armor",tags:["worn"],weight:1,armor:1},
 	"Medium armor":{type:"armor",tags:["worn","clumsy"],weight:3,armor:2},
 	"Heavy armor":{type:"armor",tags:["worn","clumsy"],weight:4,armor:3},
-//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 	"Shield":{type:"shield",names:["Shield"],tags:[],weight:2,armor:1}
 }
 STATS = ["Strength","Dexterity","Constitution","Wisdom","Intelligence","Charisma"];
 ABILITIES = ["Bold","Clever","Mighty","Quick","Subtle","Wise"];
 ABILITIESXSKILLS = {
 	"Bold":["Influence","Leadership","Performance"],
-	"Clever":["Arcana","Notice","Technical"],
+	"Clever":["Arcana","Investigate","Notice","Technical"],
 	"Mighty":["Melee Combat","Physique","Unarmed Combat"],
 	"Quick":["Athletics","Pilot","Ranged Combat"],
 	"Subtle":["Burglary","Deceive","Stealth"],
-	"Wise":["Empathy","Knowledge","Investigate","Will"]
+	"Wise":["Empathy","Knowledge","Scouting","Will"]
 };
 SKILLS = [ "Arcana", "Athletics", "Burglary", "Deceive", "Empathy", "Influence", "Investigate", "Knowledge",
-	"Leadership", "Melee Combat", "Notice", "Performance", "Physique", "Pilot", "Ranged Combat",
+	"Leadership", "Melee Combat", "Notice", "Performance", "Physique", "Pilot", "Ranged Combat", "Scouting",
 	"Stealth", "Technical", "Unarmed Combat", "Will"]
 STATSXSKILLS = {
 	Strength:["Physique","Melee Combat","Unarmed Combat"],
@@ -44,36 +50,41 @@ STATSXSKILLS = {
 	Charisma:["Deceive", "Influence", "Leadership", "Performance"]
 }
 CLASSES = ["Fighter","Brute","Soldier","Officer","Elemental","Psion","Wizard","Diplomat","Engineer","Healer","Rogue","Investgator","Agent"];
-DOMAINS = ["Air", "Animal", "Artifice", "Charm", "Community", "Earth", "Fire", "Glory", "Healing", "Knowledge", "Law",
-  "Liberation", "Luck", "Magic", "Night", "Nobility", "Plant", "Protection", "Righteousness", "Strength", "Sun", "Travel", "Trickery",
-  "War", "Water", "Weather"];
+DOMAINS = ["Air", "Animal", "Artifice", "Charm", "Community", "Earth", "Fertility", "Fire", "Force", "Glory", "Healing", "Knowledge", "Law",
+  "Luck", "Magic", "Mind", "Night", "Nobility", "Protection", "Righteousness", "Spirit", "Strength", "Sun", "Time", "Travel",
+	"Trickery", "War", "Water", "Wealth", "Weather", "Winter"];
 DOMAINSXSKILLS = {
 	"Air":["Athletics","Stealth","Leadership"],
-	"Animal":["Leadership","Physique","Technical"],
+	"Animal":["Scouting","Physique","Technical"],
 	"Artifice":["Technical","Knowledge","Performance"],
 	"Charm":["Performance","Influence","Physique"],
 	"Community":["Empathy","Leadership","Melee Combat"],
 	"Earth":["Physique","Will","Athletics"],
+	"Fertility":["Notice","Knowledge","Empathy"],
 	"Fire":["Ranged Combat","Arcana","Stealth"],
+	"Force":["Ranged Combat","Physique","Stealth"],
 	"Glory":["Melee Combat","Influence","Empathy"],
 	"Healing":["Empathy","Technical","Melee Combat"],
 	"Knowledge":["Knowledge","Technical","Physique"],
 	"Law":["Technical","Investigate","Performance"],
-	"Liberation":["Performance","Athletics","Technical"],
 	"Luck":["Pilot","Notice","Technical"],
 	"Magic": ["Arcana","Technical","Stealth"],
+	"Mind":["Knowledge","Investigate","Physique"],
 	"Night":["Stealth","Arcana","Leadership"],
 	"Nobility":["Influence","Leadership","Notice"],
-	"Plant":["Notice","Knowledge","Empathy"],
 	"Protection":["Empathy","Arcana","Melee Combat"],
 	"Righteousness":["Will","Empathy","Deceive"],
+	"Spirit":["Arcana","Stealth","Technical"],
 	"Strength":["Physique","Influence","Technical"],
 	"Sun":["Notice","Leadership","Deceive"],
-	"Travel":["Athletics","Notice","Leadership"],
+	"Time":["Notice","Will","Athletics"],
+	"Travel":["Athletics","Scouting","Leadership"],
 	"Trickery":["Deceive","Stealth","Investigate"],
 	"War":["Melee Combat","Leadership","Empathy"],
 	"Water":["Unarmed Combat","Burglary","Will"],
-	"Weather":["Performance","Arcana","Stealth"]
+	"Wealth":["Influence","Deceive","Empathy"],
+	"Weather":["Performance","Arcana","Stealth"],
+	"Winter":["Scouting","Will","Empathy"]
 }
 COLORDOMAINS = {
 	"green":["Air","Animal","Healing","Plant","Weather"],
@@ -83,44 +94,39 @@ COLORDOMAINS = {
 	"black":["Charm","Community","Night","Trickery","Water"]
 }
 DOMAINSDOOM = ["Chaos", "Darkness", "Death", "Destruction", "Evil", "Madness"];
-POWERGROUPS = {"Weather":["Gaseous Form", "Ice Storm", "Lightning", "Cold Blast", "Flight", "Weather Control", "Wind Control", "Resist Cold"],
-  "Animals":["Chameleon", "Claws/Fangs", "Animal Control", "Poison", "Size","Shapeshifter", "Shrinking", "Webbing", "Light Armor",  "Wall Crawling"],
-  "Protection":["Armor", "Life Support", "Light Armor", "Sensory Protection", "Gas Protection", "Resist Acid", "Resist Fire", "Resist Cold", "Resist Electricity"],
-  "Acid":["Acid Aura", "Acid Blast", "Life Support", "Poison", "Poison Gas", "Webbing", "Resist Acid", "Gas Protection", "Resist Poison"],
-  "Cold": ["Cold Aura", "Cold Blast", "Armor Up", "Form Wall", "Ice Storm", "Projectile Fire"],
-  "Charisma": ["Charm Person", "Emotion Projection", "Hypnotic Voice", "Super Charisma"],
-  "Constitution": ["Life Support", "Regeneration", "Super Constitution", "Resist Poison", "Doesn’t Eat or Drink", "Immortality"],
-  "Night": ["Darkness", "Dream Control", "Invisibility", "Sleep", "Doesn’t Sleep"],
-  "Death": ["Life Drain", "Necromancy", "Reanimation", "Doesn’t Eat or Drink", "Doesn’t Sleep", "Immortality"],
-  "Dexterity": ["Super Dexterity", "Super Jumping", "Swinging"],
-  "Dreams": ["Dream Control", "Illusion", "Mind Shield", "Sleep"],
-  "Earth": ["Control Armor Up", "Earth Control", "Form Wall"],
-  "Lightning": ["Electrical Aura", "Electrical Control", "Electric Shock", "EMP", "Lightning", "Magnetic Control", "Resist Electricity"],
-  "Flight": ["Flight", "Faster-than-Light", "Super Speed"],
-  "Fire": ["Control Fire", "Explosive Blast", "Fire Aura", "Fire Blast", "Flight", "Resist Fire"],
-  "Force": ["Force Bolt", "Force Field", "Force Projection", "Form Wall", "Telekinesis"],
-  "Healing": ["Disease", "Healing", "Reanimation"],
-  "Illusion": ["Glamour", "Illusion", "True Sight"],
-  "Spirit": ["Intangibility", "Invisibility", "Life Drain", "Telekinesis","Detect Supernatural"],
-  "Intelligence": ["Super Intelligence", "Omni-Lingual"],
-  "Light": ["Dazzle", "Laser", "Force Field", "Holographic Projection", "Invisibility"],
-  "Luck": ["Bad Luck", "Good Luck"],
-  "Magic": ["Astral Travel", "Bestow (Power)", "Power Weapon", "True Sight","Detect Supernatural"],
-  "Metamorphosis": ["Growth", "Shapeshifter", "Shrinking", "Stretching"],
-  "Plants": ["Plant Animation", "Poison"],
-  "Divination": ["Clairvoyance", "Precognition", "Retrocognition", "Veil"],
-  "Size": ["Growth", "Shrinking", "Size", "Tiny"],
-  "Weapons": ["Explosive Blast", "Guided Missile", "Power Weapon", "Projectile Fire", "Super Dexterity", "Super Striker", "Super Shooter", "Webbing"],
-  "Speed": ["Haste", "Super Dexterity", "Super Speed", "Super Swimming"],
-  "Sound": ["Hypnotic Voice", "Sound Control", "Sonic Aura", "Sonic Blast", "Resist Sonic", "Sonar"],
-  "Summoning": ["Duplication", "Summon Outsider", "Summon Servitor"],
-  "Strength": ["Super Jumping", "Super Swimming", "Super Strength"],
-  "Telekinesis": ["Telekinesis", "Force Field", "Form Wall", "Projectile Fire"],
-  "Telepathy": ["Illusion", "Mind Blast", "Mind Control", "Mind Scan", "Mind Shield", "Psychic Weapon", "Sleep", "Super Charisma", "Telepathy"],
-  "Teleportation": ["Apport", "Dimensional Barrier", "Portal", "Teleport"],
-  "Time": ["Duplication", "Haste", "Portal", "Precognition", "Retrocognition", "Time Travel"],
-  "Water": ["Animal Control (Aquatic)", "Liquid Form", "Life Support", "Super Swimming", "Super Aquatic", "Water Control", "Resist Cold", "Water Breathing"],
-  "Senses": ["Super Wisdom", "True Sight", "X-ray Vision", "Analytic Taste", "Danger Sense", "Heightened Smell", "Heightened Hearing", "Micro-Vision", "Super Vision"]
+FEATS = ["Backstab","Toughness","Destroy Undead","Fray","Healing","Wizardry"];
+POWERGROUPS = {
+	"Air":["Armor Up","Aura (Wind)","Aura (Sonic)", "Sound Control", "Sonic Blast", "Resist Sonic", "Sonar"],
+	"Animal":["Animal Control (Avian)","Animal Control (Land)","Animal Control (Marine)","Claws","Chameleon","Danger Sense", "Poison", "Size","Shapeshifter", "Shrinking", "Webbing", "Light Armor",  "Wall Crawling"],
+	"Artifice":["Armor",],
+	"Charm":["Charm Person", "Emotion Projection", "Hypnotic Voice", "Super Charisma"],
+	"Community":["Charm Person",],
+	"Earth": ["Armor","Armor Up", "Earth Control", "Form Wall"],
+	"Fertility":["Aura (Thorns)","Claws","Chameleon","Growth", "Plant Animation", "Poison","Shrinking", "Size", "Tiny"],
+	"Fire": ["Aura (Fire)","Control Fire", "Explosive Blast", "Fire Blast", "Flight", "Resist Fire"],
+	"Force": ["Armor","Armor Up","Aura (Lightning)","Flight", "Force Bolt", "Force Field", "Force Projection", "Form Wall", "Projectile Fire", "Telekinesis"],
+	"Glory":["Armor",],
+	"Healing": ["Disease", "Healing", "Reanimation"],
+	"Knowledge": ["Clairvoyance","Super Intelligence", "Omni-Lingual"],
+	"Law":[],
+	"Luck": ["Bad Luck","Danger Sense", "Good Luck"],
+	"Magic": ["Astral Travel","Clairvoyance","Power Weapon", "True Sight","Detect Supernatural"],
+	"Mind":["Danger Sense","Dream Control","Mind Shield", "Sleep", "Mind Blast", "Mind Control", "Mind Scan", "Psychic Weapon", "Telepathy"],
+	"Night": ["Darkness", "Dream Control", "Invisibility", "Sleep", "Doesn’t Sleep"],
+	"Nobility":["Charm Person",],
+	"Protection":["Armor","Armor Up","Danger Sense", "Life Support", "Light Armor", "Sensory Protection", "Gas Protection", "Resist Acid", "Resist Fire", "Resist Cold", "Resist Electricity"],
+	"Righteousness":[],
+	"Spirit": ["Astral Travel","Clairvoyance","Danger Sense","Life Support", "Intangibility", "Immortality", "Invisibility", "Life Drain", "Telekinesis","Detect Supernatural","Summon Outsider", "Summon Servitor"],
+	"Strength": ["Super Jumping", "Super Swimming", "Super Strength"],
+	"Sun": ["Aura (Light)","Dazzle", "Laser", "Force Field", "Holographic Projection", "Invisibility", "True Sight"],
+	"Time": ["Duplication", "Haste", "Portal", "Precognition", "Retrocognition", "Time Travel"],
+	"Travel":["Apport", "Haste", "Super Dexterity", "Super Speed", "Dimensional Barrier", "Portal", "Teleport"],
+	"Trickery":["Apport","Danger Sense",],
+	"War": ["Claws","Explosive Blast", "Guided Missile", "Power Weapon", "Projectile Fire", "Super Dexterity", "Super Striker", "Super Shooter", "Webbing"],
+	"Water": ["Blast (Acid)","Animal Control (Marine)", "Aura (Acid)","Cold Blast","Liquid Form", "Life Support", "Super Swimming", "Super Aquatic", "Water Control", "Resist Cold", "Water Breathing"],
+	"Wealth":[],
+	"Weather":["Gaseous Form", "Ice Storm", "Lightning", "Cold Blast", "Flight", "Weather Control", "Wind Control", "Resist Cold"],
+	"Winter":["Armor Up","Aura (Cold)","Claws","Cold Blast","Form Wall", "Ice Storm", "Projectile Fire"]
 }
 
 CPX.makeHero = function (opts) {
@@ -131,10 +137,15 @@ CPX.makeHero = function (opts) {
   var hRNG = new RNG(hero.uid);
 
   var stats = [2,1,1,0,0,-1];
+	hero._type="Hero";
   hero.name = hRNG.rndName();
+	hero.gender = hRNG.TrueFalse() ? "male" : "female";
   hero.stats = hRNG.shuffleAr(stats);
+	hero.location = "";
+	hero.realm = "";
 	hero.hp=6;
 	hero.maxHP=6;
+	hero.AP=30;
 	hero.damage = "1d6";
 	hero.attackActions=["Fight","Flee"];
 	hero.deeds = [];
@@ -146,28 +157,59 @@ CPX.makeHero = function (opts) {
   hero.gifts = 1;
   hero.powers = 4;
 
-  //["Fighter","Brute","Soldier","Officer","Elemental","Psion","Wizard","Diplomat","Engineer","Healer","Rogue","Investgator","Agent"];
+	var allRaces = opts.map.statPop().array;
+	hero.race = allRaces.random(hRNG);
+
+  //["Brute","Soldier","Officer","Elemental","Psion","Wizard","Diplomat","Engineer","Healer","Rogue","Investgator","Agent"];
   //["Bold","Clever","Mighty","Quick","Subtle","Wise"];
   var i = hero.stats.max().i;
-  var hclass = [["Officer","Soldier","Elemental"],["Wizard","Engineer","Investgator"],["Fighter","Brute"],["Elemental","Rogue","Agent"],["Rogue","Agent","Diplomat"],["Officer","Psion","Healer"]];
+  var hclass = [["Officer","Elemental"],["Wizard","Engineer","Investgator"],["Soldier","Brute"],["Elemental","Rogue","Agent"],["Rogue","Agent","Diplomat"],["Officer","Psion","Healer"]];
   hero.levels = [hclass[i].random(hRNG)];
 
-	var basic = ["Dagger","Short sword","Club","Staff","Crossbow"], allWeapons = [],
-		allWeilders = ["Soldier","Fighter","Brute","Agent"];
-
-	for (var x in EQUIPMENT){
-		if(EQUIPMENT[x].type=="weapon"){
-			allWeapons.push(x);
+	var classes= {
+		Brute: {eq:[["Battle axe","Maul","Greatsword","Spear"],["Bow"],["Leather armor"]],
+			start: ["Fray","Athletics","Toughness","Melee Combat","Physique"]
+		},
+		Soldier: {eq:[["Spear","Sword","Short sword","Rapier","Mace","Warhammer","Axe"],["Bow","Crossbow"],["Scale mail"],["Shield"]],
+			start: ["Fray","Athletics","Toughness","Melee Combat","Ranged Combat"]
+		},
+		Officer: {eq:[["Sword","Short sword","Rapier"],["Bow"],["Chain mail"]],
+			start:["Fray","Athletics","Melee Combat","Leadership",""]
+		},
+		Elemental: {eq:[["Staff"],["Sling"],[""]],
+			start:["Fray","","","",""]
+		},
+		Psion: {eq:[["Staff"],["Sling"],[""]],
+			start:["Fray","","","",""]
+		},
+		Wizard: {eq:[["Staff"],["Sling"],[""]],
+			start:["Fray","Knowledge","Arcana","Wizardry","Influence"]
+		},
+		Engineer:{start:["Fray","Technical","","",""]
+		},
+		Healer:{start:["Fray","Knowledge","Empathy","",""]
+		},
+		Diplomat:{eq:[["Staff","Club"],["Sling"],["Leather armor"]],
+			start:["Fray","Empathy","Influence","",""]
+		},
+		Rogue: {eq:[["Rapier","Dagger"],["Bow"],["Leather armor"]],
+			start:["Fray","Athletics","Melee Combat","Burglary","Stealth"]
+		},
+		Investgator: {eq:[["Sword","Short sword","Rapier","Mace","Axe","Hatchet"],["Bow","Crossbow"],["Leather armor"]],
+			start:["Fray","Investigate","Notice","Melee Combat",""]
+		},
+		Agent: {eq:[["Sword","Short sword","Rapier","Axe","Hatchet"],["Bow"],[""]],
+			start:["Fray","Athletics","Unarmed Combat","Melee Combat","Backstab"]
 		}
-	}
+	};
+	classes.Engineer.eq = classes.Healer.eq = classes.Diplomat.eq;
 
-	if(allWeilders.contains(hero.levels[0])){
-		hero.equipment.push("*basic"+allWeapons.random(hRNG));
+	hero.equipment.push("*$"+classes[hero.levels[0]].eq[0].random(hRNG));
+	hero.equipment.push("$"+classes[hero.levels[0]].eq[1].random(hRNG));
+	hero.equipment.push("*$Light armor");
+	if(classes[hero.levels[0]].eq.length == 4){
+		hero.equipment.push("*$"+classes[hero.levels[0]].eq[3].random(hRNG));
 	}
-	else {
-		hero.equipment.push("*basic"+basic.random(hRNG));
-	}
-	hero.equipment.push("*basicLight armor");
 
   hero.aspects = [];
   var aspect = "";
@@ -217,8 +259,8 @@ CPX.heroArmor = function (hero) {
 	var armor = 0, A="";
 	hero.equipment.forEach(function (E) {
 		if(E[0]=="*"){
-			if(E.includes("basic")){
-				A = E.substr(6);
+			if(E.includes("$")){
+				A = E.substr(2);
 				if(objExists(EQUIPMENT[A].armor)){
 					armor+=EQUIPMENT[A].armor;
 				}
@@ -231,8 +273,8 @@ CPX.heroBaseDamage = function (hero) {
 	var W="", dice = hero.damage;
 	hero.equipment.forEach(function (E) {
 		if(E[0]=="*"){
-			if(E.includes("basic")){
-				W = E.substr(6);
+			if(E.includes("$")){
+				W = E.substr(2);
 				if(objExists(EQUIPMENT[W].dmg)){
 					if(EQUIPMENT[W].dmg>-1) {
 						dice+="+";
@@ -247,14 +289,14 @@ CPX.heroBaseDamage = function (hero) {
 CPX.heroTakeDamage = function (hero,damage) {
 	hero.hp-=damage;
 	if(hero.hp < 0){
-		var n = noty({layout: 'topCenter', type: 'error', timeout: 1500, text: "You journey is over!"});
+		var n = noty({layout: 'topCenter', type: 'error', timeout: 1500, text: "Your journey is over!"});
 	}
 	else {
 		var n = noty({layout: 'topCenter', type: 'error', timeout: 1500, text: "You have taken "+damage+" damage!"});
 	}
 }
 CPX.heroFlee = function (map) {
-	var hero = hero = map._currentHero, quick = hero.stats[3], R = xorRNG.DWRoll();
+	var hero = cpxCurrentHero, quick = hero.stats[3], R = xorRNG.DWRoll();
 	if(R+quick > 6){
 		map._currentEncounter = null;
 		var n = noty({layout: 'topCenter', type: 'success', timeout: 1500, text: "You were able to flee the attack!"});
@@ -266,7 +308,7 @@ CPX.heroFlee = function (map) {
 	}
 }
 CPX.heroFight = function (map,i) {
-	var encounter = map._currentEncounter, foe = encounter[i], hero = map._currentHero, cell = map.cells[hero.location],
+	var encounter = map._currentEncounter, foe = encounter[i], hero = cpxCurrentHero, cell = map.cells[hero.location],
 		mighty = hero.stats[2], quick = hero.stats[3], armor = CPX.heroArmor(hero), R = xorRNG.DWRoll(), dmg=0, n={},
 		melee = CPX.heroSkillValue(hero,"Melee Combat"), ranged=CPX.heroSkillValue(hero,"Ranged Combat");
 
@@ -310,22 +352,47 @@ CPX.heroFight = function (map,i) {
 		dmg = xorRNG.dice(foe.dmg);
 		if(dmg > armor){
 			CPX.heroTakeDamage(hero,dmg-armor);
-			map.displayCurrentHeroInfo(hero.uid);
+			CPX.displayCurrentHeroInfo(hero.uid);
 		}
 	}
 }
+///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+CPX.heroStart = function (hid) {
 
+}
+CPX.heroMakeCurrent = function (hid) {
+	cpxCurrentHero=cpxActive.heroes[hid];
+	CPX.displayCurrentHeroInfo(hid);
+}
+CPX.heroAPCheck = function (AP,action) {
+	if(cpxCurrentHero.AP+3<AP) {
+		//they can't take action
+		var n = noty({layout: 'topCenter', type: 'error', timeout: 1500, text: "You do not have enough AP to "+action+"."});
+		return false;
+	}
+	else {
+		//They can take action - reduce AP
+		cpxCurrentHero.AP-=AP;
+		//update display
+		d3.select("#currentAP").html("AP "+cpxCurrentHero.AP);
+		return true;
+	}
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 CPX.heroEquipmentDisplay = function (hero) {
 	var i=0, idx = 0, EC = "", name="", equipped="", html="";
 	hero.equipment.forEach(function (E) {
+		idx = 0;
+
 		if(E[0]=="*"){
 			idx=1;
 			equipped="equipped";
 		}
-		if(E.includes("basic")){
-			name = E.substr(5+idx);
+
+		if(E.includes("$")){
+			name = E.substr(1+idx);
 		}
 		else {
 
@@ -340,7 +407,9 @@ CPX.heroEquipmentDisplay = function (hero) {
 	return html;
 }
 CPX.heroDisplay = function (hero) {
-  var html = "<h3>"+hero.name+"</h3><p>", levels={}, aspects={}, i=0;
+  var html = "<h3>"+hero.name+"<span class=rightAlign id=currentAP>AP "+hero.AP+"</span></h3><p>", levels={}, aspects={}, i=0;
+
+	html+=hero.gender.capFirst()+" "+hero.race.capFirst();
 
   hero.aspects.forEach(function(A){
     if(objExists(aspects[A])){
@@ -360,7 +429,7 @@ CPX.heroDisplay = function (hero) {
 		}
   });
 
-	html+="<strong>Aspects:</strong> ";
+	html+="</br><strong>Aspects:</strong> ";
 	for (var x in aspects){
 		if(i>0){
 			html+=", ";
@@ -388,33 +457,21 @@ CPX.heroDisplay = function (hero) {
 	}
   html+="</div>";
 
-	html+="<p><div class=center><strong>HP:</strong> "+hero.hp+" <strong>DMG:</strong> ";
+	html+="<div class=center><strong>HP:</strong> "+hero.hp+" <strong>DMG:</strong> ";
 	html+=CPX.heroBaseDamage(hero)+" <strong>Armor:</strong> "+CPX.heroArmor(hero)+"</div>";
-	html+="<strong>Equipment:</strong> "+CPX.heroEquipmentDisplay(hero)+"</p>";
+	html+="<p><strong>Equipment:</strong> "+CPX.heroEquipmentDisplay(hero)+"</p>";
 
   return "<div class=hero data-uid="+hero.uid+" data-lv="+hero.levels.length+">"+html+"</div>";
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-hexPlaneMap.prototype.heroStart = function () {
-
-}
-hexPlaneMap.prototype.heroEndTurn = function () {
-	this._currentHero=null;
-	this.queueCheck();
-}
-hexPlaneMap.prototype.heroMakeCurrent = function (hid) {
-	this._currentHero=this._heroes[hid];
-	this.displayCurrentHeroInfo(hid);
-}
-///////////////////////////////////////////////////////////////////////////////////////////////
 hexPlaneMap.prototype.heroActionRest = function () {
-	var hero = this._currentHero;
+	var hero = cpxCurrentHero;
 	hero.hp = hero.maxHP;
-	this.displayCurrentHeroInfo(hero.uid);
+	CPX.displayCurrentHeroInfo(hero.uid);
 }
-hexPlaneMap.prototype.heroActionExplore = function (opts) {
-	var hero = this._currentHero, cell = this.cells[opts.cid];
+hexPlaneMap.prototype.heroActionExplore = function (cid) {
+	var hero = cpxCurrentHero, map = this, cell = this.cells[cid];
 
 	if(cell.pop.troubles<1){
 		return;
@@ -437,7 +494,7 @@ hexPlaneMap.prototype.heroActionExplore = function (opts) {
 		}
 		if(action == "Help"){
 			var overcome = $(this).attr("data-overcome");
-			if(map.heroOvercome(cid,T)) {
+			if(map.heroOvercome(cid,overcome)) {
 				var n = noty({layout: 'center', type: 'success', timeout: 1500, text: "Success!"});
 				cell.pop.troubles--;
 			}
@@ -454,7 +511,7 @@ hexPlaneMap.prototype.heroActionExplore = function (opts) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 hexPlaneMap.prototype.heroAddResource = function (resource) {
-	var hero = this._currentHero;
+	var hero = cpxCurrentHero;
 	if(objExists(hero.resources[resource])){
 		hero.resources[resource]++;
 	}
@@ -462,67 +519,51 @@ hexPlaneMap.prototype.heroAddResource = function (resource) {
 		hero.resources[resource] = 1;
 	}
 }
-hexPlaneMap.prototype.heroOvercome = function (cid,trouble) {
-	var hero = this._currentHero, cell=this.cells[cid], overcome = trouble.overcome[1],
-		ability = TROUBLEOVERCOME[overcome].random(),
-		ids = ABILITIES.indexOf(ability),
-		bonus = hero.stats[ids],
-		R = xorRNG.DWRoll();
+hexPlaneMap.prototype.heroOvercome = function (cid,skill) {
+	var hero = cpxCurrentHero, cell=this.cells[cid],
+		bonus = CPX.heroSkillValue(hero,skill),
+		R = xorRNG.DWRoll(), n={};
 
-		if(R+bonus > 6){
-			ability = TROUBLEOVERCOME[overcome].random();
-			ids = ABILITIES.indexOf(ability);
-			bonus = hero.stats[ids];
-			R = xorRNG.DWRoll();
-
-			if(R+bonus+1 > 6) {
-				this._currentHero.deeds.push([this._time,"Trouble",cid,cell.pop.eid]);
-				this.heroAddResource(this.empireRandomResource(cell.pop.eid));
-				return true;
-			}
-			//failure yields XP
-			hero.xp++;
-			return false;
-		}
-		else {
-			//failure yields XP
-			hero.xp++;
-			ability = TROUBLEOVERCOME[overcome].random();
-			ids = ABILITIES.indexOf(ability);
-			bonus = hero.stats[ids];
-			R = xorRNG.DWRoll();
-
-			if(R+bonus-1 > 6) {
-				this._currentHero.deeds.push([this._time,"Trouble",cid,cell.pop.eid]);
-				this.heroAddResource(this.empireRandomResource(cell.pop.eid));
-				return true;
-			}
-			//failure yields XP
-			hero.xp++;
-			return false;
-		}
+	if(R+bonus > 6){
+		//success
+		hero.deeds.push({t:this._time,cid:cid,action:"Trouble"});
+		this.heroAddResource(this.empireRandomResource(cell.pop.eid));
+		return true;
+	}
+	else {
+		//failure yields XP
+		hero.xp++;
+		return false;
+	}
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
-hexPlaneMap.prototype.heroMove = function (opts) {
-	//set the hero's location to the opts cid
-	this._currentHero.location = opts.cid;
+CPX.heroMoveRealm = function (hid,rid) {
+	//set the hero's realm to the opts rid
+	cpxActive.heroes[hid].realm = rid;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////
+hexPlaneMap.prototype.heroMove = function (hid,cid) {
+	var hero = cpxActive.heroes[hid];
+	//set the hero's location to the cid
+	hero.location = cid;
 	//display the move on the hex map
-	this.displayHeroMove(this._currentHero.uid);
-	//call the cell enter function
-	this.cellEnter(opts.cid);
+	this.displayHeroMove(hero.uid);
 }
 hexPlaneMap.prototype.heroCellMoveCheck = function (cid) {
 	//get the array of cells within one
-	var cA= this.cellWithinX(this._currentHero.location,1)[1];
+	var cA= this.cellWithinX(cpxCurrentHero.location,1)[1].n;
 	//if the cell clicked is in the array then queue the move
 	if(cA.contains(cid)){
 		//determine the time the move will take
-		var nT = this._time+Math.floor(400/8/this._currentHero.speed);
-		//add a queue action for the move
-		this.queueNew(nT,"heroMove",{cid:cid,hid:this._currentHero.uid});
-		//check the queue for the next action
-		this.heroEndTurn();
+		var AP = Math.floor(400/8/cpxCurrentHero.speed);
+		//if the hero has the AP move them...
+		if(CPX.heroAPCheck(AP,"move")){
+			//move them
+			this.heroMove(cpxCurrentHero.uid,cid);
+			//call the cell enter function
+			this.actionCellEnter(cid);
+		}
 	}
 	//if no move return false
 	return false;
@@ -531,7 +572,8 @@ hexPlaneMap.prototype.heroCellMoveCheck = function (cid) {
 hexPlaneMap.prototype.heroRandomPlace = function (hid) {
 	//then find some land to place the hero on
 	var cA = this.cellsByTerrain().land;
-	this._heroes[hid].location = cA.random(this.RNG);
+	cpxActive.heroes[hid].realm = this.uid;
+	cpxActive.heroes[hid].location = cA.random(this.RNG);
 	this.displayHeroToMap(hid);
 
 	this.queueNew(1,"heroStart",{hid:hid});
@@ -545,7 +587,7 @@ hexPlaneMap.prototype.heroRandomGen = function () {
 
   var tmpHeros = [];
   for (var i = 0; i < 4; i++) {
-    tmpHeros.push(CPX.makeHero());
+    tmpHeros.push(CPX.makeHero({map:map}));
     $("#notify .content").append(CPX.heroDisplay(tmpHeros[i]));
   }
 
@@ -564,9 +606,12 @@ hexPlaneMap.prototype.heroRandomGen = function () {
 		$("#notify").slideUp();
 		$("#notify .content").empty();
 
-		map._heroes[seed] = CPX.makeHero({seed:seed});
-    console.log(CPX.makeHero({seed:seed}));
+		cpxActive.heroes[seed]=CPX.makeHero({seed:seed,map:map});
+		map._heroes.push(seed);
+    console.log(CPX.makeHero({seed:seed,map:map}));
 		map.heroRandomPlace(seed);
+		CPX.heroMakeCurrent(seed);
+		CPX.displayActiveHeroList();
 
 		var n = noty({layout: 'topCenter', type: 'information', text: 'Zoom with the mousewheel. </br>Drag by holding the left mouse button.'});
   });

@@ -158,14 +158,16 @@ objExists = function (obj) {
     return true;
   }
 }
-objArrayContains = function (objarray,key,data) {
-	for (var x in objarray) {
-		if(objExists(objarray[x].key)) {
-			if(objarray[x].key == data) {
-				return x;
+//a search for an array of objects
+arrayObjLocate = function (objarray,key,data) {
+	for (var i = 0 ; i < objarray.length; i++) {
+		if(objExists(objarray[i][key])) {
+			if(objarray[i][key] == data) {
+				return {i:i,val:objarray[i]};
 			}
 		}
 	}
+	return {i:-1,val:null};
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //String helpers

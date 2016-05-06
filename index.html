@@ -16,6 +16,15 @@
   <div id="title"></div>
   <div id="menu">
     <div class="menu"><a href="./index.html">Home</a></div>
+    <div class="menu dropdown" id="File">File
+      <div class="dropdown-content">
+        <ul>
+          <li class='fileOptions' id="fNew">New</li>
+          <li class='fileOptions' id="fLoad">Load</li>
+          <li class='fileOptions' id='fSave'>Save</li>
+        </ul>
+      </div>
+    </div>
     <div class="menu dropdown">Views
       <div class="dropdown-content">
         <ul>
@@ -35,8 +44,17 @@
     <div id="heroCurrent"></div>
     <div id="dInfo"></div>
     <div id="heroOptions" class="buttons center"></div>
+    <div id="timeOptions" class="buttons center">
+      <button id="timeAddMonth">Next Month</button>
+    </div>
   </div>
   <div id="right">
+    <div id="activeRealms" class="active"><h3 class="center">Active Realms</h3></div>
+    <div id="activeHeroes" class="active">
+      <h3 class="center">Active Heroes</h3>
+      <div class="content"></div>
+      <div class="buttons center"><button id="addHero">Add Hero</button></div>
+    </div>
     <div id="hexStats"></div>
     <div id="hexKey"></div>
   </div>
@@ -49,6 +67,7 @@
   </div>
 </body>
 
+  <script type="text/javascript" src="src/localforage.min.js"></script>
   <script type="text/javascript" src="src/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="src/jquery.noty.packaged.min.js"></script>
   <script type="text/javascript" src="src/svg-pan-zoom.min.js"></script>
@@ -57,7 +76,10 @@
   <script type="text/javascript" src="src/xor4096.min.js"></script>
   <script type="text/javascript" src="src/chance.min.js"></script>
   <script type="text/javascript" src="src/d3.min.js"></script>
-  <script type="text/javascript" src="src/hexUtilities.js"></script>
+  <script type="text/javascript" src="src/cpxUtilities.js"></script>
+  <script type="text/javascript" src="src/cpxDB.js"></script>
+  <script type="text/javascript" src="src/cpxActiveRealm.js"></script>
+  <script type="text/javascript" src="src/cpxCard.js"></script>
   <script type="text/javascript" src="src/hexPlane.js"></script>
   <script type="text/javascript" src="src/hexDisplay.js"></script>
   <script type="text/javascript" src="src/hexDoom.js"></script>
